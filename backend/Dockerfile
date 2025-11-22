@@ -1,10 +1,9 @@
-FROM openjdk:25-jdk-slim AS build
+FROM openjdk:20-jdk-slim
 WORKDIR /app
-COPY . .
-RUN ./mvnw clean package -DskipTests
-
-FROM openjdk:25-jdk-slim
-WORKDIR /app
-COPY --from=build /app/target/*.jar app.jar
+COPY mvnw .
+COPY .mvn .mvn
+COPY pom.xml .
+COPY src src
+RUN ./mvnw dependency:go-offline
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+CMD ["./mvnw", "spring-boot:run"]
