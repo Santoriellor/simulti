@@ -1,0 +1,27 @@
+services:
+  db:
+    image: postgres:16
+    container_name: myapp_db
+    environment:
+      POSTGRES_DB: myapp
+      POSTGRES_USER: myappuser
+      POSTGRES_PASSWORD: myapppassword
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - myappnet
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U myappuser -d myapp" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:
+
+networks:
+  myappnet:

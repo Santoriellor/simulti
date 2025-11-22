@@ -1,0 +1,32 @@
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/myapp}
+    username: ${SPRING_DATASOURCE_USERNAME:myappuser}
+    password: ${SPRING_DATASOURCE_PASSWORD:myapppassword}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    show-sql: false
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        jdbc:
+          lob:
+            non_contextual_creation: true
+          time_zone: UTC
+        format_sql: true
+
+logging:
+  file:
+    name: logs/app.log
+  level:
+    root: INFO
+    org.springframework.security: INFO
+server:
+  port: 8080
+
+jwt:
+  secret: ${JWT_SECRET:change_this_to_a_long_random_secret_at_runtime}
+  expiration-ms: ${JWT_EXPIRATION_MS:604800000} # 7 days
