@@ -1,0 +1,46 @@
+services:
+  backend:
+    build: ./backend
+    container_name: simulti_backend
+    restart: always
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+    depends_on:
+      - db
+    ports: ["8081:8080"]
+
+  frontend:
+    build: ./frontend
+    container_name: simulti_frontend
+    restart: always
+    depends_on: backend
+    ports: ["4201:80"]
+    networks:
+      - simulti_net
+
+  db:
+    image: postgres:16
+    container_name: simulti_db
+    environment:
+      POSTGRES_DB: myapp
+      POSTGRES_USER: myappuser
+      POSTGRES_PASSWORD: myapppassword
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - simulti_net
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U myappuser -d myapp" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:
+
+networks:
+  simulti_net:

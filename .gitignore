@@ -1,0 +1,48 @@
+# ---- GLOBAL ----
+# OS files
+.DS_Store
+Thumbs.db
+
+# IntelliJ / JetBrains
+.idea/
+*.iml
+*.iws
+out/
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environments / secrets
+*.env
+.env.*
+!.env.example  # keep example config if needed
+
+# ---- MAVEN / SPRING BOOT BACKEND ----
+backend/target/
+backend/.mvn/wrapper/maven-wrapper.jar
+backend/.factorypath
+
+# Spring Tool Suite
+backend/.apt_generated/
+backend/.classpath
+backend/.project
+backend/.settings/
+backend/.springBeans
+
+# ---- ANGULAR FRONTEND ----
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+frontend/.vs/
+
+# Cache
+frontend/.npm/
+frontend/.cache/
+
+# ---- DOCKER ----
+# Docker volumes / runtime artifacts should not be tracked
+**/pgdata/
