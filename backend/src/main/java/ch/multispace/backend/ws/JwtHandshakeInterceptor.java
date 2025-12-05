@@ -1,8 +1,9 @@
 package ch.multispace.backend.ws;
 
-import ch.multispace.backend.repositories.SessionRepository;
 import ch.multispace.backend.security.JwtService;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.annotation.Nonnull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,65 +17,82 @@ import java.util.Map;
 @Component
 public class JwtHandshakeInterceptor implements HandshakeInterceptor {
 
-    private final JwtService jwtService;
-    private final SessionRepository sessionRepository;
+    private static final Logger LOGGER = LoggerFactory.getLogger(JwtHandshakeInterceptor.class);
 
-    @Autowired
-    public JwtHandshakeInterceptor(JwtService jwtService, SessionRepository sessionRepository) {
+    private final JwtService jwtService;
+
+    public JwtHandshakeInterceptor(JwtService jwtService) {
         this.jwtService = jwtService;
-        this.sessionRepository = sessionRepository;
     }
 
     @Override
-    public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response,
-                                   WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
+    public boolean beforeHandshake(@Nonnull ServerHttpRequest request, @Nonnull ServerHttpResponse response,
+                                   @Nonnull WebSocketHandler wsHandler, @Nonnull Map<String, Object> attributes) throws Exception {
 
-        if (request instanceof ServletServerHttpRequest servletRequest) {
-            HttpServletRequest req = servletRequest.getServletRequest();
+        if (!(request instanceof ServletServerHttpRequest servletRequest)) {
+            return false;
+        }
 
-            // Try to get token from query param first
-            String token = req.getParameter("token");
+        HttpServletRequest req = servletRequest.getServletRequest();
 
-            // If not in query, try from Authorization header
-            if (token == null) {
-                String auth = req.getHeader("Authorization");
-                if (auth != null && auth.startsWith("Bearer ")) token = auth.substring(7);
-            }
+        // Try to get token from query param first
+        String token = req.getParameter("token");
 
-            if (token == null) {
-                System.out.println("❌ No token found in handshake request");
-                return false;
-            }
-
-            // optional: check session exists in DB
-            var sessionOpt = sessionRepository.findByToken(token);
-            if (sessionOpt.isEmpty()) {
-                System.out.println("❌ No session found for token");
-                return false;
-            }
-
-            // Validate token structure and expiry
-            try {
-                jwtService.validateToken(token); // will throw InvalidJwtException if invalid
-                String email = jwtService.extractUsername(token);
-                String userId = jwtService.extractClaim(token, c -> c.get("userId", String.class));
-
-                attributes.put("email", email);
-                attributes.put("token", token);
-                attributes.put("userId", userId);
-
-                System.out.println("✅ WebSocket handshake authorized for user " + email);
-                return true;
-
-            } catch (JwtService.InvalidJwtException e) {
-                System.out.println("❌ Token validation failed: " + e.getMessage());
-                return false;
+        // If not in query, try Authorization header
+        if (token == null) {
+            String authHeader = req.getHeader("Authorization");
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                token = authHeader.substring(7);
             }
         }
-        return false;
+
+        if (token == null) {
+            LOGGER.info("❌ No token found in handshake request");
+            return false;
+        }
+
+        try {
+            // Validate token
+            jwtService.validateTokenForWebSocket(token);
+
+            // Extract userId from 'sub' claim
+            String userId = jwtService.extractClaimForWebSocket(token, "userId");
+            String email = jwtService.extractUsername(token);
+
+            if (userId == null) {
+                LOGGER.info("❌ Token missing 'sub' claim for userId");
+                return false;
+            }
+
+            // Store in handshake attributes
+            attributes.put("userId", userId);
+            attributes.put("email", email);
+            attributes.put("token", token);
+
+            // Capture optional roomId from query param to unify identity with persisted room
+            String roomIdParam = req.getParameter("roomId");
+            if (roomIdParam != null && !roomIdParam.isBlank()) {
+                try {
+                    // validate UUID format; store as string to avoid classloading issues here
+                    java.util.UUID.fromString(roomIdParam);
+                    attributes.put("roomId", roomIdParam);
+                } catch (IllegalArgumentException ex) {
+                    LOGGER.warn("Ignoring invalid roomId in WS handshake: {}", roomIdParam);
+                }
+            }
+
+            LOGGER.info("✅ WebSocket handshake authorized for user {} (userId={})", email, userId);
+            return true;
+
+        } catch (JwtService.InvalidJwtException e) {
+            LOGGER.error("❌ Token validation failed: {}", e.getMessage());
+            return false;
+        }
     }
 
     @Override
-    public void afterHandshake(ServerHttpRequest request, ServerHttpResponse response,
-                               WebSocketHandler wsHandler, Exception exception) { }
+    public void afterHandshake(@Nonnull ServerHttpRequest request, @Nonnull ServerHttpResponse response,
+                               @Nonnull WebSocketHandler wsHandler, Exception exception) {
+        // No-op
+    }
 }

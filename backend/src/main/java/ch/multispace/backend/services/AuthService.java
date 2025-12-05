@@ -5,17 +5,20 @@ import ch.multispace.backend.model.User;
 import ch.multispace.backend.repositories.PlayerRepository;
 import ch.multispace.backend.repositories.UserRepository;
 import ch.multispace.backend.security.JwtService;
+import ch.multispace.backend.ws.GameWebSocketHandler;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
-
 @Service
 @RequiredArgsConstructor
 public class AuthService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AuthService.class);
 
     private final UserRepository userRepository;
     private final PlayerRepository playerRepository;
@@ -67,13 +70,14 @@ public class AuthService {
         try {
             authManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
         } catch (Exception e) {
+            LOGGER.error("Authentication failed: {}", e.getMessage());
             throw new InvalidCredentialsException("Invalid email or password");
         }
 
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
 
-        return jwtService.generateToken(userDetailsFromUser(user));
+        return jwtService.generateTokenForWebSocket(userDetailsFromUser(user), user.getId());
     }
 
     // --- Helper to create Spring Security UserDetails --- NEEDED?

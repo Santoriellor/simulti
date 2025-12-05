@@ -30,7 +30,6 @@ public class GameRoomService {
         GameRoom session = new GameRoom();
         session.setHost(host);
         session.setRoomName(roomName);
-        session.getPlayerIds().add(host.getId());
         session.setStatus("WAITING");
         session.setMaxPlayer(ch.multispace.backend.game.GameRoom.MAX_PLAYERS);
         return gameRoomRepository.save(session);
@@ -61,6 +60,12 @@ public class GameRoomService {
         if (session.getPlayerIds().size() >= 2) return Optional.empty(); // max players
         if (!session.getPlayerIds().contains(player.getId())) {
             session.getPlayerIds().add(player.getId());
+            // If room now full, mark as STARTED; otherwise keep as WAITING
+            if (session.getPlayerIds().size() >= ch.multispace.backend.game.GameRoom.MAX_PLAYERS) {
+                session.setStatus("STARTED");
+            } else if (session.getStatus() == null || session.getStatus().isBlank()) {
+                session.setStatus("WAITING");
+            }
             gameRoomRepository.save(session);
         }
         return Optional.of(session);
@@ -72,4 +77,7 @@ public class GameRoomService {
     public Optional<GameRoom> getRoom(UUID roomId) {
         return gameRoomRepository.findByRoomId(roomId);
     }
+
+    /** Save/update room */
+    public GameRoom save(GameRoom room) { return gameRoomRepository.save(room); }
 }

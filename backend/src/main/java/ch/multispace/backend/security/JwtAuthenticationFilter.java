@@ -38,13 +38,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String token = authHeader.substring(7);
 
         try {
-            // Validate token or throw exception if invalid/expired
-            jwtService.validateToken(token);
-
             // Extract username from token
             final String username = jwtService.extractUsername(token);
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
+                // Validate token or throw exception if invalid/expired
+                jwtService.validateToken(token, userDetails);
 
                 // Set authentication in Spring Security context
                 UsernamePasswordAuthenticationToken authToken =

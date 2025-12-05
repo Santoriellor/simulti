@@ -1,7 +1,5 @@
 package ch.multispace.backend.config;
 
-import ch.multispace.backend.repositories.SessionRepository;
-import ch.multispace.backend.security.JwtService;
 import ch.multispace.backend.ws.GameWebSocketHandler;
 import ch.multispace.backend.ws.JwtHandshakeInterceptor;
 import org.springframework.context.annotation.Configuration;
