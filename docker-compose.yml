@@ -38,8 +38,8 @@ services:
       - "traefik.http.routers.simulti-backend.tls.certresolver=le"
 
       # Remove `/api` before forwarding to Springboot
-      - "traefik.http.middlewares.simulti-backend-strip.stripprefix.prefixes=/api"
-      - "traefik.http.routers.simulti-backend.middlewares=simulti-backend-strip"
+      #- "traefik.http.middlewares.simulti-backend-strip.stripprefix.prefixes=/api"
+      #- "traefik.http.routers.simulti-backend.middlewares=simulti-backend-strip"
 
       # Springboot listens on port 8080
       - "traefik.http.services.simulti-backend.loadbalancer.server.port=8080"
