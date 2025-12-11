@@ -1075,3 +1075,42 @@ java.io.IOException: Une connexion établie a été abandonnée par un logiciel 
 2025-12-05T13:16:01.365+01:00  INFO 10164 --- [http-nio-8080-exec-6] c.m.backend.ws.GameWebSocketHandler      : Player daa9e5df-370a-4ee4-a5ed-4e37d620488e quit room 226b25e5-e138-40d4-bdca-f449b4c2cf9b (removed=true)
 2025-12-05T13:16:01.528+01:00  INFO 10164 --- [http-nio-8080-exec-6] c.m.backend.ws.GameWebSocketHandler      : 🗑️ Deleted persisted GameRoom with id 226b25e5-e138-40d4-bdca-f449b4c2cf9b after it became empty
 2025-12-05T13:16:16.845+01:00  INFO 10164 --- [SpringApplicationShutdownHook] o.s.b.w.e.tomcat.GracefulShutdown        : Commencing graceful shutdown. Waiting for active requests to complete
+2025-12-05T13:23:10.445+01:00  INFO 16060 --- [main] c.m.backend.SpaceInvadersApplication     : Starting SpaceInvadersApplication using Java 25.0.1 with PID 16060 (C:\Users\Maria\Desktop\Dev\space-multi\backend\target\classes started by Maria in C:\Users\Maria\Desktop\Dev\space-multi\backend)
+2025-12-05T13:23:10.448+01:00  INFO 16060 --- [main] c.m.backend.SpaceInvadersApplication     : No active profile set, falling back to 1 default profile: "default"
+2025-12-05T13:23:11.547+01:00  INFO 16060 --- [main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-12-05T13:23:11.648+01:00  INFO 16060 --- [main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 92 ms. Found 4 JPA repository interfaces.
+2025-12-05T13:23:12.355+01:00  INFO 16060 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2025-12-05T13:23:12.375+01:00  INFO 16060 --- [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-12-05T13:23:12.376+01:00  INFO 16060 --- [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.48]
+2025-12-05T13:23:12.458+01:00  INFO 16060 --- [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-12-05T13:23:12.458+01:00  INFO 16060 --- [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1934 ms
+2025-12-05T13:23:12.617+01:00  INFO 16060 --- [main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-12-05T13:23:12.671+01:00  INFO 16060 --- [main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.33.Final
+2025-12-05T13:23:12.712+01:00  INFO 16060 --- [main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2025-12-05T13:23:13.032+01:00  INFO 16060 --- [main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-12-05T13:23:13.069+01:00  INFO 16060 --- [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2025-12-05T13:23:13.251+01:00  INFO 16060 --- [main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@56266bda
+2025-12-05T13:23:13.254+01:00  INFO 16060 --- [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2025-12-05T13:23:13.331+01:00  INFO 16060 --- [main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 16.10
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2025-12-05T13:23:14.679+01:00  INFO 16060 --- [main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-12-05T13:23:14.944+01:00  INFO 16060 --- [main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-12-05T13:23:15.492+01:00  INFO 16060 --- [main] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2025-12-05T13:23:16.619+01:00  INFO 16060 --- [main] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name userDetailsServiceImpl
+2025-12-05T13:23:16.831+01:00  WARN 16060 --- [main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-12-05T13:23:17.742+01:00  INFO 16060 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/'
+2025-12-05T13:23:17.756+01:00  INFO 16060 --- [main] c.m.backend.SpaceInvadersApplication     : Started SpaceInvadersApplication in 7.978 seconds (process running for 8.474)
+2025-12-05T13:24:12.705+01:00  INFO 16060 --- [http-nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-12-05T13:24:12.705+01:00  INFO 16060 --- [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2025-12-05T13:24:12.707+01:00  INFO 16060 --- [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 2 ms
+2025-12-05T13:26:05.730+01:00  INFO 16060 --- [SpringApplicationShutdownHook] o.s.b.w.e.tomcat.GracefulShutdown        : Commencing graceful shutdown. Waiting for active requests to complete
+2025-12-05T13:26:05.742+01:00  INFO 16060 --- [tomcat-shutdown] o.s.b.w.e.tomcat.GracefulShutdown        : Graceful shutdown complete
+2025-12-05T13:26:05.749+01:00  INFO 16060 --- [SpringApplicationShutdownHook] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2025-12-05T13:26:05.753+01:00  INFO 16060 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2025-12-05T13:26:05.763+01:00  INFO 16060 --- [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
