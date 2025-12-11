@@ -39,7 +39,7 @@ services:
       - "traefik.http.middlewares.simulti-backend-strip.stripprefix.prefixes=/api"
       - "traefik.http.routers.simulti-backend.middlewares=simulti-backend-strip"
 
-      # Springboot listens on port 8000
+      # Springboot listens on port 8080
       - "traefik.http.services.simulti-backend.loadbalancer.server.port=8080"
 
   frontend:

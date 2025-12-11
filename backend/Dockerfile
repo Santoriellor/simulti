@@ -1,5 +1,5 @@
 # Stage 1 — Build the Spring Boot app
-FROM openjdk:20-jdk-slim AS build
+FROM eclipse-temurin:21-jdk AS build
 WORKDIR /app
 
 COPY mvnw .
@@ -10,7 +10,7 @@ COPY src src
 RUN ./mvnw -q -e -DskipTests clean package
 
 # Stage 2 — Run the JAR
-FROM openjdk:20-jdk-slim
+FROM eclipse-temurin:21-jdk
 WORKDIR /app
 
 COPY --from=build /app/target/*.jar app.jar
