@@ -14,7 +14,9 @@ services:
     restart: unless-stopped
 
   backend:
-    build: ./backend
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
     container_name: simulti_backend
     depends_on:
       - db
@@ -43,7 +45,9 @@ services:
       - "traefik.http.services.simulti-backend.loadbalancer.server.port=8080"
 
   frontend:
-    build: ./frontend
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
     container_name: simulti_frontend
     depends_on:
       - backend
