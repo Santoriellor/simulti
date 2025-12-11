@@ -4,7 +4,7 @@ WORKDIR /app
 COPY frontend/package*.json ./
 RUN npm ci
 COPY frontend/ .
-RUN npm run build -- --configuration production
+RUN npm run build
 
 # Serve with NGINX
 FROM nginx:alpine
