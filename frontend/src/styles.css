@@ -1,0 +1,22 @@
+/* You can add global styles to this file, and also import other style files */
+html, body, app-root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: #000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.game-container {
+  width: 100vw;
+  max-width: 480px;
+  height: auto;
+  background: black;
+  overflow: hidden;
+  border: 1px solid #00ff66;
+  border-radius: 20px;
+  aspect-ratio: 480 / 740;
+}

@@ -1,0 +1,36 @@
+<div class="viewport-wrapper">
+  <div class="app-container">
+
+    <!-- Background layers clipped inside app-container -->
+    <div class="app-bg">
+      <div class="app-bg-image"></div>
+      <app-backdrop class="app-bg-animation"></app-backdrop>
+    </div>
+
+    <!-- Topbar: shown only when logged in -->
+    @if (currentUser) {
+      <div class="app-topbar">
+        <span class="user-name">
+          <svg
+            width="25px" height="25px"
+            xmlns="http://www.w3.org/2000/svg"
+            id="svg5212"
+            viewBox="0 0 128 128">
+            <path
+              style="fill:#00ff66;fill-rule:evenodd;stroke-width:0;stroke-miterlimit:4"
+              id="path5222"
+              stroke-miterlimit="4"
+              d="m 79.00009,54.00429 0,10 10,0 0,-10 -10,0 z m -40,0 0,10 10,0 0,-10 -10,0 z m 0,40 20,0 0,10 -20,0 0,-10 z m 50,0 0,10 -20,0 0,-10 20,0 z m 0,-60 0,-10 10,0 0,10 -10,0 z m -50,0 10,0 0,10 30,0 0,-10 10,0 0,10 10,0 0,10 10,0 0,10 10,0 0,30 -10,0 0,-20 -10,0 0,20 -10,0 0,-10 -50,0 0,10 -10,0 0,-20 -10,0 0,20 -10,0 0,-30 10,0 0,-10 10,0 0,-10 10,0 0,-10 z m -10,-10 10,0 0,10 -10,0 0,-10 z" />
+          </svg>
+          {{ currentUser.username }}</span>
+        <button (click)="logout()" class="btn btn-danger btn-xs">Log out</button>
+      </div>
+    }
+
+    <!-- Page / Routed Views -->
+    <div class="app-content">
+      <router-outlet></router-outlet>
+    </div>
+
+  </div>
+</div>

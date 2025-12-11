@@ -1,0 +1,55 @@
+<div class="auth-page">
+  <h2>Connexion</h2>
+
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <!-- Email -->
+    <div>
+      <label for="email">Email</label>
+      <input id="email" type="email" formControlName="email" />
+
+      @if (form.get('email')?.touched && form.get('email')?.invalid) {
+        <div class="error">
+          @if (form.get('email')?.errors?.['required']) {
+            <small>Email requis</small>
+          }
+          @if (form.get('email')?.errors?.['email']) {
+            <small>Email invalide</small>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Password -->
+    <div>
+      <label for="password">Mot de passe</label>
+      <input id="password" type="password" formControlName="password" />
+
+      @if (form.get('password')?.touched && form.get('password')?.invalid) {
+        <div class="error">
+          @if (form.get('password')?.errors?.['required']) {
+            <small>Mot de passe requis</small>
+          }
+          @if (form.get('password')?.errors?.['minlength']) {
+            <small>Min 6 caractères</small>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Server error -->
+    @if (error) {
+      <div class="server-error">{{ error }}</div>
+    }
+
+    <!-- Submit -->
+    <button type="submit" [disabled]="loading">
+      {{ loading ? 'Connexion...' : 'Se connecter' }}
+    </button>
+  </form>
+
+  <p>
+    Pas encore inscrit ?
+    <a routerLink="/auth/register">Créez un compte</a>
+  </p>
+</div>
+

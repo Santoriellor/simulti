@@ -1,0 +1,36 @@
+  <header class="si-header">
+    <h1>SCORES</h1>
+    <div class="si-actions">
+      <a [routerLink]="['/home']" class="btn">Home</a>
+    </div>
+  </header>
+
+  <div class="si-panel board">
+    <div class="board-header">
+      <span>Top scores</span>
+      <button class="btn" (click)="fetch()" [disabled]="loading">
+        {{ loading ? 'Loading...' : 'Refresh' }}
+      </button>
+    </div>
+
+    <table class="si-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Joueur</th>
+          <th style="text-align:right;">Score</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let row of rows; let i = index; trackBy: trackByName">
+          <td>{{ i + 1 }}</td>
+          <td>{{ row.player }}</td>
+          <td style="text-align:right;">{{ row.score }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="hint">
+      Astuce: éliminez les ovnis pour des points bonus !
+    </div>
+  </div>

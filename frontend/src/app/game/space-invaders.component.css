@@ -1,0 +1,93 @@
+.game-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 16px 0;
+}
+
+.hud {
+  width: 100%;
+  max-width: 900px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #0f0;
+  font-family: monospace;
+  font-weight: bold;
+  text-shadow: 0 0 6px rgba(0, 255, 0, 0.35);
+  padding: 4px 6px;
+  box-sizing: border-box;
+}
+
+.hud-side {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hud-left {
+  justify-content: flex-start;
+}
+
+.hud-right {
+  justify-content: flex-end;
+}
+
+.hud-center {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hud-name {
+  display: flex;
+  flex-direction: column;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hud-username { margin-right: 8px; }
+.hud-score { margin-left: 8px; }
+
+.hud-lives .life {
+  margin-right: 2px;
+  color: #f55;
+  text-shadow: 0 0 4px rgba(255, 0, 0, 0.5);
+}
+
+.hud-level {
+  letter-spacing: 2px;
+}
+
+.placeholder { opacity: 0.6; }
+
+.hud-gameover-small {
+  color: #f55;
+  text-shadow: 0 0 6px rgba(255, 0, 0, 0.45);
+}
+
+.game-canvas {
+  image-rendering: pixelated;
+  border: 2px solid #0f0;
+  background: #000;
+  border-radius: 6px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+  /* Make canvas responsive and keep aspect ratio (480x600) */
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  display: block;
+  aspect-ratio: 480 / 600;
+}
+
+.legend {
+  color: #666;
+  font-family: monospace;
+  font-size: 12px;
+}

@@ -1,0 +1,49 @@
+<div class="game-wrap">
+  <!-- HUD: players (left/right) and level (center) -->
+  <div class="hud" *ngIf="state">
+    <div class="hud-side hud-left">
+      <div class="hud-name hud-left" *ngIf="mePlayer as p; else noLeft">
+        <span class="hud-username">{{ p.username }}</span>
+        <ng-container *ngIf="(p.lives || 0) > 0; else leftDead">
+          <span class="hud-lives" [attr.aria-label]="'Lives: ' + p.lives">
+            <span class="life" *ngFor="let _ of getArray(p.lives)">❤</span>
+          </span>
+        </ng-container>
+        <ng-template #leftDead>
+          <span class="hud-gameover-small" aria-live="polite">Game Over</span>
+        </ng-template>
+        <span class="hud-score">{{ p.score | number:'1.0-0' }}</span>
+      </div>
+      <ng-template #noLeft>
+        <div class="hud-name placeholder">Waiting...</div>
+      </ng-template>
+    </div>
+
+    <div class="hud-center">
+      <span class="hud-level">LEVEL {{ state.level || 1 }}</span>
+    </div>
+
+    <div class="hud-side hud-right">
+      <div class="hud-name hud-right" *ngIf="otherPlayer as q; else noRight">
+        <span class="hud-username">{{ q.username }}</span>
+        <ng-container *ngIf="(q.lives || 0) > 0; else rightDead">
+          <span class="hud-lives" [attr.aria-label]="'Lives: ' + q.lives">
+            <span class="life" *ngFor="let _ of getArray(q.lives)">❤</span>
+          </span>
+        </ng-container>
+        <ng-template #rightDead>
+          <span class="hud-gameover-small" aria-live="polite">Game Over</span>
+        </ng-template>
+        <span class="hud-score">{{ q.score | number:'1.0-0' }}</span>
+      </div>
+      <ng-template #noRight>
+        <div class="hud-name placeholder">Waiting...</div>
+      </ng-template>
+    </div>
+  </div>
+
+  <canvas #gameCanvas class="game-canvas" width="480" height="600"></canvas>
+  <div class="legend">
+    <div>Controls: ← → to move, ESPACE to shoot, ESC to quit</div>
+  </div>
+</div>

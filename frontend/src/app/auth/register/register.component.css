@@ -1,0 +1,49 @@
+.auth-page {
+  max-width: 420px;
+  margin: 24px auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+button {
+  background-color: #1976d2;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+button:hover:not(:disabled) {
+  background-color: #1259a7;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.error small {
+  color: #c00;
+}
+
+.server-error {
+  color: #c00;
+  margin: 8px 0;
+}

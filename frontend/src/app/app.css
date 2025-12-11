@@ -1,0 +1,78 @@
+/* Full screen black wrapper around app */
+html, body {
+  margin: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: #000;
+}
+
+/* Centers the game vertically/horizontally */
+.viewport-wrapper {
+  width: 100vw;
+  height: 100vh;
+  background: #000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Portrait fixed-size game canvas */
+.app-container {
+  width: 360px;   /* << target phone width */
+  height: 640px;  /* << target phone height */
+  background: #000;
+  position: relative;
+  overflow: hidden;
+  border: 2px solid #00ff66; /* optional neon border effect */
+  border-radius: 10px;
+}
+
+/* Background fully clipped inside */
+.app-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+.app-bg-image,
+.app-bg-animation {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+}
+
+/* Topbar always inside boundaries */
+.app-topbar {
+  height: 36px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 12px;
+  font-size: 12px;
+  z-index: 5;
+  position: relative;
+}
+
+.user-name {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+/* Routed content sits above background */
+.app-content {
+  position: absolute;
+  inset: 0;
+  top: 40px; /* leave space for the topbar */
+  z-index: 3;
+  overflow: hidden;
+  padding: 10px;
+  height: calc(100% - 40px);
+}
+
+@media (max-height: 700px) {
+  .app-container {
+    transform: scale(0.9);
+  }
+}

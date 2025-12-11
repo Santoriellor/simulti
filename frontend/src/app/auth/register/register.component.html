@@ -1,0 +1,68 @@
+<div class="auth-page">
+  <h2>Inscription</h2>
+
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <!-- Email -->
+    <div>
+      <label for="email">Email</label>
+      <input id="email" type="email" formControlName="email" />
+      @if (form.get('email')?.touched && form.get('email')?.invalid) {
+        <div class="error">
+          @if (form.get('email')?.errors?.['required']) {
+            <small>Email requis</small>
+          }
+          @if (form.get('email')?.errors?.['email']) {
+            <small>Email invalide</small>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Nom d'utilisateur -->
+    <div>
+      <label for="username">Nom d'utilisateur</label>
+      <input id="username" type="text" formControlName="username" />
+      @if (form.get('username')?.touched && form.get('username')?.invalid) {
+        <div class="error">
+          @if (form.get('username')?.errors?.['required']) {
+            <small>Nom requis</small>
+          }
+          @if (form.get('username')?.errors?.['minlength']) {
+            <small>Min 3 caractères</small>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Mot de passe -->
+    <div>
+      <label for="password">Mot de passe</label>
+      <input id="password" type="password" formControlName="password" />
+      @if (form.get('password')?.touched && form.get('password')?.invalid) {
+        <div class="error">
+          @if (form.get('password')?.errors?.['required']) {
+            <small>Mot de passe requis</small>
+          }
+          @if (form.get('password')?.errors?.['minlength']) {
+            <small>Min 6 caractères</small>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Erreur serveur -->
+    @if (error) {
+      <div class="server-error">{{ error }}</div>
+    }
+
+    <!-- Soumission -->
+    <button type="submit" [disabled]="loading">
+      {{ loading ? 'Inscription...' : 'S\'inscrire' }}
+    </button>
+  </form>
+
+  <p>
+    Déjà inscrit ?
+    <a routerLink="/auth/login">Se connecter</a>
+  </p>
+</div>
