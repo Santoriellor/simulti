@@ -19,7 +19,7 @@ services:
     depends_on:
       - db
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/simulti
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/simultinet
       SPRING_DATASOURCE_USERNAME: simultiuser
       SPRING_DATASOURCE_PASSWORD: simultipassword
       SERVER_PORT: 8080
@@ -34,12 +34,12 @@ services:
       - "traefik.http.routers.simulti-backend.rule=Host(`simulti.santoriello.ch`) && PathPrefix(`/api`)"
       - "traefik.http.routers.simulti-backend.entrypoints=websecure"
       - "traefik.http.routers.simulti-backend.tls.certresolver=le"
-      -
-      - # Remove `/api` before forwarding to Django
+
+      - # Remove `/api` before forwarding to Springboot
       - "traefik.http.middlewares.simulti-backend-strip.stripprefix.prefixes=/api"
       - "traefik.http.routers.simulti-backend.middlewares=simulti-backend-strip"
 
-      - # Django listens on port 8000
+      - # Springboot listens on port 8000
       - "traefik.http.services.simulti-backend.loadbalancer.server.port=8080"
 
   frontend:
@@ -54,7 +54,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.simulti-frontend.rule=Host(`simulti.santoriello.ch`)"
       - "traefik.http.routers.simulti-frontend.entrypoints=websecure"
-      - "traefik.http.routers.workshop-frontend.tls.certresolver=le"
+      - "traefik.http.routers.simulti-frontend.tls.certresolver=le"
       - "traefik.http.services.simulti-frontend.loadbalancer.server.port=80"
 
 volumes:
