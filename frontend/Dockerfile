@@ -1,9 +1,9 @@
 # Stage 1: Build Angular app
 FROM node:20 AS build
 WORKDIR /app
-COPY package*.json ./
+COPY frontend/package*.json ./
 RUN npm ci
-COPY . .
+COPY frontend/ .
 RUN npm run build -- --configuration production
 
 # Serve with NGINX

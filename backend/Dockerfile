@@ -2,13 +2,22 @@
 FROM eclipse-temurin:25-jdk AS build
 WORKDIR /app
 
-COPY mvnw .
-COPY .mvn .mvn
-COPY pom.xml .
-COPY src src
+# Copy Maven wrapper and .mvn folder
+COPY backend/mvnw .
+COPY backend/.mvn .mvn
+COPY backend/pom.xml .
 
+# Make mvnw executable
 RUN chmod +x mvnw
-RUN ./mvnw -q -e -DskipTests clean package
+
+# Download dependencies first (for caching)
+RUN ./mvnw dependency:go-offline -B
+
+# Copy source code
+COPY backend/src src
+
+# Build the application (skip tests for faster build)
+RUN ./mvnw clean package -DskipTests -B
 
 # Stage 2 — Run the JAR
 FROM eclipse-temurin:25-jdk
