@@ -30,3 +30,6 @@ server:
 jwt:
   secret: ${JWT_SECRET:change_this_to_a_long_random_secret_at_runtime}
   expiration-ms: ${JWT_EXPIRATION_MS:604800000} # 7 days
+
+app:
+  frontend-url: https://simulti.santoriello.ch
