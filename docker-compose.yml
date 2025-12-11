@@ -36,13 +36,15 @@ services:
       - "traefik.http.routers.simulti-backend.rule=Host(`simulti.santoriello.ch`) && PathPrefix(`/api`)"
       - "traefik.http.routers.simulti-backend.entrypoints=websecure"
       - "traefik.http.routers.simulti-backend.tls.certresolver=le"
-
-      # Remove `/api` before forwarding to Springboot
-      #- "traefik.http.middlewares.simulti-backend-strip.stripprefix.prefixes=/api"
-      #- "traefik.http.routers.simulti-backend.middlewares=simulti-backend-strip"
-
       # Springboot listens on port 8080
       - "traefik.http.services.simulti-backend.loadbalancer.server.port=8080"
+
+      - "traefik.http.routers.simulti-backend-ws.rule=Host(`simulti.santoriello.ch`) && PathPrefix(`/ws`)"
+      - "traefik.http.routers.simulti-backend-ws.entrypoints=websecure"
+      - "traefik.http.routers.simulti-backend-ws.tls.certresolver=le"
+      - "traefik.http.services.simulti-backend-ws.loadbalancer.server.port=8080"
+      - "traefik.http.services.simulti-backend-ws.loadbalancer.sticky=true" # optional
+      - "traefik.http.routers.simulti-backend-ws.middlewares=ws-headers"
 
   frontend:
     build:
