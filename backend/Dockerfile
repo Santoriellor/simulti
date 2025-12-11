@@ -1,5 +1,5 @@
 # Stage 1 — Build the Spring Boot app
-FROM eclipse-temurin:21-jdk AS build
+FROM eclipse-temurin:25-jdk AS build
 WORKDIR /app
 
 COPY mvnw .
@@ -11,7 +11,7 @@ RUN chmod +x mvnw
 RUN ./mvnw -q -e -DskipTests clean package
 
 # Stage 2 — Run the JAR
-FROM eclipse-temurin:21-jdk
+FROM eclipse-temurin:25-jdk
 WORKDIR /app
 
 COPY --from=build /app/target/*.jar app.jar
