@@ -36,15 +36,21 @@ services:
       - "traefik.http.routers.simulti-backend.rule=Host(`simulti.santoriello.ch`) && PathPrefix(`/api`)"
       - "traefik.http.routers.simulti-backend.entrypoints=websecure"
       - "traefik.http.routers.simulti-backend.tls.certresolver=le"
+      - "traefik.http.routers.simulti-backend.service=simulti-backend"
       # Springboot listens on port 8080
       - "traefik.http.services.simulti-backend.loadbalancer.server.port=8080"
 
+      # /ws → backend (WebSocket)
       - "traefik.http.routers.simulti-backend-ws.rule=Host(`simulti.santoriello.ch`) && PathPrefix(`/ws`)"
       - "traefik.http.routers.simulti-backend-ws.entrypoints=websecure"
       - "traefik.http.routers.simulti-backend-ws.tls.certresolver=le"
-      - "traefik.http.services.simulti-backend-ws.loadbalancer.server.port=8080"
-      - "traefik.http.services.simulti-backend-ws.loadbalancer.sticky=true" # optional
-      - "traefik.http.routers.simulti-backend-ws.middlewares=ws-headers"
+      - "traefik.http.routers.simulti-backend-ws.service=simulti-backend"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   frontend:
     build:
@@ -62,6 +68,11 @@ services:
       - "traefik.http.routers.simulti-frontend.entrypoints=websecure"
       - "traefik.http.routers.simulti-frontend.tls.certresolver=le"
       - "traefik.http.services.simulti-frontend.loadbalancer.server.port=80"
+    healthcheck:
+      test: [ "CMD", "wget", "-qO-", "http://localhost/" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 
 volumes:
   pgdata:
