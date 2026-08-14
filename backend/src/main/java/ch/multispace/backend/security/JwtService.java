@@ -6,6 +6,8 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -23,7 +25,12 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-    private static final String SECRET_KEY = "YOUR_SECRET_KEY_HERE_CHANGE_THIS_TO_A_256_BIT_KEY";
+    private static final String FORBIDDEN_PLACEHOLDER =
+            "YOUR_SECRET_KEY_HERE_CHANGE_THIS_TO_A_256_BIT_KEY";
+    private static final int MIN_KEY_BYTES = 32;
+
+    @Value("${jwt.secret:}")
+    private String secretKey;
     private static final long EXPIRATION_TIME_MS = 1000L * 60 * 60 * 4; // 4h
 
     // ----------------------
@@ -137,8 +144,30 @@ public class JwtService {
     // Key Generation
     // ----------------------
 
+    /**
+     * Fails application startup rather than allowing a weak or absent signing key.
+     * Package-private so the test can invoke it directly.
+     */
+    @PostConstruct
+    void validateKeyOnStartup() {
+        if (secretKey == null || secretKey.isBlank()) {
+            throw new IllegalStateException(
+                    "jwt.secret is not configured. Set the JWT_SECRET environment variable.");
+        }
+        if (FORBIDDEN_PLACEHOLDER.equals(secretKey)) {
+            throw new IllegalStateException(
+                    "jwt.secret is still the placeholder value. Generate a real key.");
+        }
+        int length = secretKey.getBytes(StandardCharsets.UTF_8).length;
+        if (length < MIN_KEY_BYTES) {
+            throw new IllegalStateException(
+                    "jwt.secret must be at least " + MIN_KEY_BYTES
+                    + " bytes for HS256; got " + length);
+        }
+    }
+
     private Key getSignInKey() {
-        return Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
+        return Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
     }
 
     // ----------------------
