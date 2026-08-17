@@ -23,5 +23,15 @@ WORKDIR /app
 
 COPY --from=build /app/target/*.jar app.jar
 
+# Run unprivileged. Port 8080 is above 1024, so no capability is required.
+# /app/logs must exist and be writable: application.yml sets
+# logging.file.name=logs/app.log, which resolves under this working directory.
+RUN groupadd --gid 1000 app \
+    && useradd --uid 1000 --gid 1000 --no-create-home --shell /usr/sbin/nologin app \
+    && mkdir -p /app/logs \
+    && chown -R 1000:1000 /app
+
+USER 1000:1000
+
 EXPOSE 8080
 CMD ["java", "-jar", "app.jar"]
