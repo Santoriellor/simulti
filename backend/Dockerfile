@@ -16,7 +16,9 @@ COPY backend/src src
 RUN mvn clean package -DskipTests -B
 
 # Stage 2 — Run the JAR
-FROM eclipse-temurin:25-jdk
+# Runtime needs a JRE, not a JDK: shipping javac, jdb and the full tool chain
+# into production adds attack surface and image size for no benefit.
+FROM eclipse-temurin:25-jre
 WORKDIR /app
 
 COPY --from=build /app/target/*.jar app.jar
