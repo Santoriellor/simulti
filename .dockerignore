@@ -1,0 +1,32 @@
+# Build context is the repo root for BOTH backend/Dockerfile and
+# frontend/Dockerfile (docker-compose.yml: `context: .`), so this single file
+# governs both builds.
+
+# Never ship VCS metadata or dependency trees into a layer
+.git/
+.gitignore
+**/node_modules/
+
+# Build output - the images rebuild these from source
+backend/target/
+frontend/dist/
+
+# Application logs must never enter an image layer
+backend/logs/
+
+# Never bake configuration or secrets into an image layer.
+# Both forms are required: .dockerignore patterns are anchored at the context
+# root, so a bare `.env` does NOT match a nested `frontend/.env`.
+.env
+.env.*
+**/.env
+**/.env.*
+!.env.example
+!**/.env.example
+
+# Editor and CI noise
+.idea/
+*.iml
+.vscode/
+.github/
+*.md
