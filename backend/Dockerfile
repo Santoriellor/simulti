@@ -12,8 +12,11 @@ RUN mvn dependency:go-offline -B
 # Copy source code
 COPY backend/src src
 
-# Build the application (skip tests for faster build)
-RUN mvn clean package -DskipTests -B
+# Build the application. Tests RUN here on purpose: this is the gate that stops
+# a broken backend from being packaged into a deployable image. A failing test
+# fails the build, which fails the deploy - that is the intended behaviour, so
+# never reinstate -DskipTests to "unblock" a deploy.
+RUN mvn clean package -B
 
 # Stage 2 — Run the JAR
 # Runtime needs a JRE, not a JDK: shipping javac, jdb and the full tool chain

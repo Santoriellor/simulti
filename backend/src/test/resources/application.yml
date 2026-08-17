@@ -1,0 +1,30 @@
+# Test-only configuration. Overrides the main application.yml when tests run.
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+
+# JwtService fails fast on a blank, placeholder, or short key, so contextLoads needs a real
+# one here. This value is test-only and grants nothing - production reads JWT_SECRET from
+# /srv/secrets/simulti/jwt.env.
+jwt:
+  secret: test-only-secret-key-not-used-anywhere-in-production-0123456789
+  expiration-ms: 14400000
+
+# CorsConfig and WebSocketConfig both require this with no default. src/test/resources/application.yml
+# replaces (not merges with) src/main/resources/application.yml on the test classpath, so it must be
+# repeated here too, or contextLoads fails on these beans instead of on the datasource/JWT key.
+app:
+  frontend-url: http://localhost:4200
+
+logging:
+  level:
+    root: WARN
