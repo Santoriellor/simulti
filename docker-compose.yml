@@ -10,6 +10,13 @@ services:
     networks:
       - simultinet
     restart: unless-stopped
+    healthcheck:
+      # POSTGRES_USER and POSTGRES_DB come from /srv/secrets/simulti/db.env.
+      test: ["CMD-SHELL", "pg_isready -q -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
   backend:
     build:
@@ -51,6 +58,15 @@ services:
       - "traefik.http.routers.simulti-backend-ws.entrypoints=websecure"
       - "traefik.http.routers.simulti-backend-ws.tls.certresolver=le"
       - "traefik.http.routers.simulti-backend-ws.service=simulti-backend"
+    healthcheck:
+      # bash explicitly: /dev/tcp is a bash builtin and this image's /bin/sh is
+      # dash. No actuator dependency exists, so a TCP connect is the available
+      # readiness signal - Tomcat binds 8080 only after the context loads.
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8080"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
 
   frontend:
     build:
@@ -72,6 +88,13 @@ services:
       - "traefik.http.routers.simulti-frontend.tls.certresolver=le"
       - "traefik.http.services.simulti-frontend.loadbalancer.server.port=8080"
       - "traefik.http.routers.simulti-frontend.middlewares=security-headers@file,gzip-compress@file"
+    healthcheck:
+      # busybox wget, present in the alpine nginx image. Port 8080 per Task 6.
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
 volumes:
   pgdata:
