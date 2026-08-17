@@ -31,7 +31,9 @@ public class JwtService {
 
     @Value("${jwt.secret:}")
     private String secretKey;
-    private static final long EXPIRATION_TIME_MS = 1000L * 60 * 60 * 4; // 4h
+
+    @Value("${jwt.expiration-ms:14400000}")
+    private long expirationMs;
 
     // ----------------------
     // Token Generation
@@ -49,7 +51,7 @@ public class JwtService {
                 .setClaims(claims)
                 .setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME_MS))
+                .setExpiration(new Date(System.currentTimeMillis() + expirationMs))
                 .signWith(getSignInKey(), SignatureAlgorithm.HS256)
                 .compact();
     }

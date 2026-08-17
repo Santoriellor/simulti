@@ -46,3 +46,6 @@ frontend/.cache/
 # ---- DOCKER ----
 # Docker volumes / runtime artifacts should not be tracked
 **/pgdata/
+
+# Application logs - containers log to stdout; docker logs collects them
+backend/logs/
