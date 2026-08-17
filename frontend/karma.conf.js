@@ -8,13 +8,23 @@
 module.exports = function (config) {
   config.set({
     frameworks: ['jasmine'],
-    plugins: [require('karma-jasmine'), require('karma-chrome-launcher')],
+    // karma-coverage is registered because the builder appends a 'coverage'
+    // reporter when --code-coverage is passed; without the plugin that flag
+    // fails instead of producing a report.
+    plugins: [
+      require('karma-jasmine'),
+      require('karma-chrome-launcher'),
+      require('karma-coverage'),
+    ],
     reporters: ['progress'],
     browsers: ['ChromeHeadlessNoSandbox'],
     customLaunchers: {
       ChromeHeadlessNoSandbox: {
         base: 'ChromeHeadless',
-        flags: ['--no-sandbox', '--disable-gpu'],
+        // --disable-dev-shm-usage matches the builder's own built-in launcher:
+        // containers default to a 64 MB /dev/shm and Chrome crashes once the
+        // suite is large enough to exhaust it.
+        flags: ['--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage'],
       },
     },
   });
