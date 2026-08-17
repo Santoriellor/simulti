@@ -24,7 +24,11 @@ services:
       dockerfile: backend/Dockerfile
     container_name: simulti_backend
     depends_on:
-      - db
+      db:
+        # service_healthy, not the default service_started: a started postgres
+        # is not an accepting postgres, so the backend used to race the
+        # database on every deploy and rely on restart to recover.
+        condition: service_healthy
     env_file:
       - /srv/secrets/simulti/db.env
       - /srv/secrets/simulti/jwt.env
@@ -74,7 +78,8 @@ services:
       dockerfile: frontend/Dockerfile
     container_name: simulti_frontend
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     networks:
       - proxy-network
     restart: unless-stopped
