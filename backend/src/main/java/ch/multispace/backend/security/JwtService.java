@@ -33,7 +33,7 @@ public class JwtService {
     private String secretKey;
 
     @Value("${jwt.expiration-ms:14400000}")
-    private long expirationMs;
+    private long expirationMs = 14400000L;   // 4h; also the value when constructed outside Spring
 
     // ----------------------
     // Token Generation
