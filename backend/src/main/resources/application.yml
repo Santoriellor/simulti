@@ -9,7 +9,13 @@ spring:
   jpa:
     show-sql: false
     hibernate:
-      ddl-auto: update
+      # validate, never update. Hibernate no longer creates or alters anything in
+      # production; it only checks that the schema matches the entities and
+      # refuses to start if it does not. database/init.sql is the schema of
+      # record. Do NOT put this back to update to "fix" a startup failure - the
+      # failure IS the finding, and the fix is an ALTER plus a matching edit to
+      # init.sql.
+      ddl-auto: validate
     properties:
       hibernate:
         jdbc:
