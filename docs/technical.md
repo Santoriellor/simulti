@@ -108,6 +108,24 @@ this codebase) with unused imports removed:
 mvn spotless:apply
 ```
 
+`google-java-format` must be pinned to **1.34.0 or newer** (currently 1.36.1)
+— that is the first release with JDK 25 support. Earlier versions, including
+the 1.25.2 this project started on, throw `NoSuchMethodError` on JDK 25's
+`javac` internals and fail outright; there is no working `--add-exports`
+workaround. This project's `mvn` runs on JDK 25 (see Prerequisites above), so
+`spotless:apply`/`spotless:check` run under the same JDK as everything else —
+no separate JDK is needed just to format.
+
+Spotless caches its results in `backend/target/spotless-index`. That cache is
+JDK-specific: an index written under one JDK reports files as already clean
+without re-running the formatter under a different JDK, which can mask a
+formatter that would otherwise fail. Clear it before trusting a
+`spotless:check` result across a JDK or google-java-format version change:
+
+```bash
+rm -rf backend/target/spotless-index
+```
+
 Frontend formatting is Prettier, a declared devDependency
 (`frontend/package.json`, pinned exact version) configured by
 `frontend/.prettierrc`:
