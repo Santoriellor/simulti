@@ -105,4 +105,16 @@ class AuthControllerTest {
                 .andReturn();
         assertEquals(200, result.getResponse().getStatus());
     }
+
+    @Test
+    void meNeverReturnsThePasswordHash() throws Exception {
+        String token = registerAndGetToken();
+        MvcResult result = mockMvc.perform(get("/api/auth/me")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.password").doesNotExist())
+                .andReturn();
+        assertTrue(!result.getResponse().getContentAsString().contains("$2a$"),
+                "the response must not contain a BCrypt hash");
+    }
 }

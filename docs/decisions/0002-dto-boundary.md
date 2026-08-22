@@ -21,6 +21,23 @@ directly — the boundary depends entirely on nobody forgetting an annotation
 on a class whose primary job is mapping to a database table, not describing
 an API contract.
 
+## Evidence
+
+Before the fix, `AuthControllerTest.meNeverReturnsThePasswordHash` was run
+against `GET /api/auth/me` for a freshly registered user and observed this
+response body, captured verbatim from the test failure output:
+
+```json
+{"id":"29d0f870-1c2d-44d9-80d7-3f2c78a7da67","email":"user1@example.com","username":"user1","password":"$2a$10$UqHQqZVk4uKUiONOZlwsAubynQSChq25dDIx/lbsNu9UXPFcwUa5C","createdAt":"2026-08-22T11:25:58.687383+02:00"}
+```
+
+The `password` field holds a live BCrypt hash (`$2a$10$...`) for the
+registered account, sent verbatim to the client. The test failed with:
+
+```
+java.lang.AssertionError: Expected no value at JSON path "$.password" but found: '$2a$10$UqHQqZVk4uKUiONOZlwsAubynQSChq25dDIx/lbsNu9UXPFcwUa5C'
+```
+
 ## Decision
 
 Persistence entities are not serialized to API clients. Response shapes are

@@ -1,5 +1,6 @@
 package ch.multispace.backend.controllers;
 
+import ch.multispace.backend.dtos.UserDto;
 import ch.multispace.backend.exceptions.NotFoundException;
 import ch.multispace.backend.model.User;
 import ch.multispace.backend.repositories.UserRepository;
@@ -33,11 +34,12 @@ public class AuthController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<User> getCurrentUser(@AuthenticationPrincipal org.springframework.security.core.userdetails.User userDetails) {
+    public ResponseEntity<UserDto> getCurrentUser(
+            @AuthenticationPrincipal org.springframework.security.core.userdetails.User userDetails) {
         // userDetails.getUsername() contains the email
         User user = userRepository.findByEmail(userDetails.getUsername())
                 .orElseThrow(() -> new NotFoundException("User not found"));
-        return ResponseEntity.ok(user);
+        return ResponseEntity.ok(UserDto.from(user));
     }
 
     @Data
