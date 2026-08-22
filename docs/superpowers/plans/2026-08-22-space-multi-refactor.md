@@ -407,6 +407,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -506,15 +507,14 @@ class GameRoomControllerTest {
         String token = registerAndGetToken();
         String roomId = createRoom(token, "Delta");
 
-        mockMvc.perform(post("/api/rooms/" + roomId + "/delete")
-                        .header("Authorization", "Bearer " + token))
-                .andExpect(status().is4xxClientError());
-
-        mockMvc.perform(java.util.Objects.requireNonNull(
-                        org.springframework.test.web.servlet.request.MockMvcRequestBuilders
-                                .delete("/api/rooms/" + roomId + "/delete"))
+        mockMvc.perform(delete("/api/rooms/" + roomId + "/delete")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isNoContent());
+
+        // and it is gone afterwards
+        mockMvc.perform(get("/api/rooms/" + roomId)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isNotFound());
     }
 }
 ```
@@ -1258,8 +1258,7 @@ Append to `GameRoomControllerTest`:
         String roomId = createRoom(hostToken, "Echo");
 
         String strangerToken = registerAndGetToken();
-        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
-                        .delete("/api/rooms/" + roomId + "/delete")
+        mockMvc.perform(delete("/api/rooms/" + roomId + "/delete")
                         .header("Authorization", "Bearer " + strangerToken))
                 .andExpect(status().isForbidden());
 
@@ -1506,12 +1505,24 @@ Replace the fields and the four handlers:
     }
 ```
 
-In `deleteRoom`, replace the user lookup with the service so the last two
-repository fields can go:
+In `deleteRoom`, replace **only the user lookup** with the service, so the last
+two repository fields can go:
 
 ```java
         User user = playerProvisioningService.forPrincipal(userDetails).getUser();
 ```
+
+**Keep the ownership check from Task 8 exactly as it is.** This step removes a
+repository dependency; it does not touch authorization. If the resulting
+`deleteRoom` no longer contains the
+`throw new ForbiddenException("Only the host may delete this room")` branch, you
+have reintroduced the security defect Task 8 closed. Verify before moving on:
+
+```bash
+grep -n "ForbiddenException" backend/src/main/java/ch/multispace/backend/controllers/GameRoomController.java
+```
+
+Expected: one hit, inside `deleteRoom`.
 
 Then delete the `PlayerRepository` and `UserRepository` fields and their
 imports. `JwtService` stays — `streamRooms` still uses it.
@@ -1939,6 +1950,11 @@ Expected: no output. The project authenticates with jjwt (`io.jsonwebtoken`) in
 retired Spring Security OAuth project. It reached end of life in 2022, it is
 pinned here to a 2021 release, and it sits inside a Spring Boot 3.5.7
 application that never calls it. It receives no security patches.
+
+Append that paragraph, plus the empty output of step 1 as the evidence it was
+unused, to `docs/decisions/0003-deferred-findings.md` under a heading
+`Removed: spring-security-oauth2`. The record matters more than the removal —
+without it the next person to see an OAuth-shaped requirement may re-add it.
 
 - [ ] **Step 3: Remove the dependency**
 
