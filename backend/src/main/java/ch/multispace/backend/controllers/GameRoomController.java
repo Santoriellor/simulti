@@ -1,6 +1,7 @@
 package ch.multispace.backend.controllers;
 
 import ch.multispace.backend.dtos.CreateRoomRequestDTO;
+import ch.multispace.backend.dtos.GameRoomDto;
 import ch.multispace.backend.exceptions.ForbiddenException;
 import ch.multispace.backend.exceptions.NotFoundException;
 import ch.multispace.backend.exceptions.UnauthorizedException;
@@ -8,8 +9,7 @@ import ch.multispace.backend.game.GameRoomService;
 import ch.multispace.backend.model.GameRoom;
 import ch.multispace.backend.model.PlayerEntity;
 import ch.multispace.backend.model.User;
-import ch.multispace.backend.repositories.PlayerRepository;
-import ch.multispace.backend.repositories.UserRepository;
+import ch.multispace.backend.services.PlayerProvisioningService;
 import ch.multispace.backend.events.RoomsEventBroadcaster;
 import ch.multispace.backend.security.JwtService;
 import lombok.RequiredArgsConstructor;
@@ -29,15 +29,14 @@ import java.util.UUID;
 public class GameRoomController {
 
     private final GameRoomService gameRoomService;
-    private final PlayerRepository playerRepository;
-    private final UserRepository userRepository;
+    private final PlayerProvisioningService playerProvisioningService;
     private final RoomsEventBroadcaster roomsEventBroadcaster;
     private final JwtService jwtService;
 
     /** List open rooms */
     @GetMapping
-    public List<GameRoom> listRooms() {
-        return gameRoomService.listOpenRooms();
+    public List<GameRoomDto> listRooms() {
+        return gameRoomService.listOpenRooms().stream().map(GameRoomDto::from).toList();
     }
 
     /** SSE stream for live waiting room updates */
@@ -58,29 +57,14 @@ public class GameRoomController {
 
     /** Create a new room */
     @PostMapping
-    public ResponseEntity<GameRoom> createRoom(
+    public ResponseEntity<GameRoomDto> createRoom(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestBody CreateRoomRequestDTO request
     ) {
-
-        if (userDetails == null) {
-            throw new UnauthorizedException("Authentication required");
-        }
-
-        User user = userRepository
-                .findByEmail(userDetails.getUsername())
-                .orElseThrow(() -> new NotFoundException("User not found"));
-        PlayerEntity player = playerRepository
-                .findByUser(user)
-                .orElseGet(() -> {
-                    PlayerEntity newPlayer = new PlayerEntity();
-                    newPlayer.setUser(user);
-                    return playerRepository.save(newPlayer);
-                });
-
-        GameRoom session = gameRoomService.createRoom(player, request.name());
-        roomsEventBroadcaster.broadcastRoomCreated(session);
-        return ResponseEntity.ok(session);
+        PlayerEntity player = playerProvisioningService.forPrincipal(userDetails);
+        GameRoom room = gameRoomService.createRoom(player, request.name());
+        roomsEventBroadcaster.broadcastRoomCreated(room);
+        return ResponseEntity.ok(GameRoomDto.from(room));
     }
 
     /** Delete a room */
@@ -93,9 +77,7 @@ public class GameRoomController {
             throw new UnauthorizedException("Authentication required");
         }
 
-        User user = userRepository
-                .findByEmail(userDetails.getUsername())
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        User user = playerProvisioningService.forPrincipal(userDetails).getUser();
 
         GameRoom room = gameRoomService.findById(roomId)
                 .orElseThrow(() -> new NotFoundException("Room not found"));
@@ -112,37 +94,27 @@ public class GameRoomController {
 
     /** Join a room */
     @PostMapping("/{roomId}/join")
-    public ResponseEntity<GameRoom> joinRoom(
+    public ResponseEntity<GameRoomDto> joinRoom(
             @PathVariable UUID roomId,
             @AuthenticationPrincipal UserDetails userDetails
     ) {
-        User user = userRepository
-                .findByEmail(userDetails.getUsername())
-                .orElseThrow(() -> new NotFoundException("User not found"));
-        PlayerEntity player = playerRepository
-                .findByUser(user)
-                .orElseGet(() -> {
-                    PlayerEntity newPlayer = new PlayerEntity();
-                    newPlayer.setUser(user);
-                    return playerRepository.save(newPlayer);
-                });
-
-        Optional<GameRoom> sessionOpt = gameRoomService.joinRoom(roomId, player);
-        sessionOpt.ifPresent(room -> {
-            // Broadcast update, and if room is full/started also broadcast started
+        PlayerEntity player = playerProvisioningService.forPrincipal(userDetails);
+        Optional<GameRoom> roomOpt = gameRoomService.joinRoom(roomId, player);
+        roomOpt.ifPresent(room -> {
             roomsEventBroadcaster.broadcastRoomUpdated(room);
             if ("STARTED".equalsIgnoreCase(room.getStatus())) {
                 roomsEventBroadcaster.broadcastRoomStarted(room);
             }
         });
-        return sessionOpt.map(ResponseEntity::ok).orElse(ResponseEntity.badRequest().build());
+        return roomOpt.map(room -> ResponseEntity.ok(GameRoomDto.from(room)))
+                .orElseGet(() -> ResponseEntity.badRequest().build());
     }
 
     /** Get a room state */
     @GetMapping("/{roomId}")
-    public ResponseEntity<GameRoom> getRoom(@PathVariable UUID roomId) {
+    public ResponseEntity<GameRoomDto> getRoom(@PathVariable UUID roomId) {
         return gameRoomService.getRoom(roomId)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .map(room -> ResponseEntity.ok(GameRoomDto.from(room)))
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 }

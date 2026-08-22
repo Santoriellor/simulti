@@ -121,3 +121,34 @@ Task 6 resolved this. `GameRoomController.streamRooms` now throws
 genuine `401 Unauthorized` response. `theSseStreamRejectsAMissingToken` was
 updated in the same commit to assert `status().isUnauthorized()` directly,
 and no longer needs `assertThrows`/`ServletException`.
+
+## `RoomsEventBroadcaster` still broadcasts entities, not DTOs (Task 9)
+
+Task 9 moved `GameRoomController`'s REST handlers (`listRooms`, `createRoom`,
+`joinRoom`, `getRoom`) onto the new `GameRoomDto`, so the JSON returned by
+those endpoints no longer exposes the JPA entity directly. `RoomsEventBroadcaster`
+was not touched: `broadcastRoomCreated`, `broadcastRoomUpdated` and
+`broadcastRoomStarted` still take a `ch.multispace.backend.model.GameRoom` and
+serialize it straight onto the `/api/rooms/stream` SSE channel. `host` carries
+`@JsonIgnore`, so the entity's sensitive relation still doesn't leak over SSE,
+but the SSE payload shape now diverges from the REST payload shape (for
+example, it has no `hostUsername`) where before Task 9 they matched by
+construction. Converting the broadcaster onto `GameRoomDto` was out of scope
+for this task; left for whoever next touches `RoomsEventBroadcaster`.
+
+## `listRooms` N+1 when building `GameRoomDto` (Task 9, observed not fixed)
+
+`GameRoomDto.from` reads `room.getHost().getUser().getUsername()`. Both
+`GameRoom.host` (`@ManyToOne`) and `PlayerEntity.user` (`@OneToOne`) default to
+eager fetching, so no `LazyInitializationException` was observed in the test
+suite. But eager-by-default does not mean fetched-in-one-query: with SQL
+logging turned on for a local run of `GameRoomControllerTest`,
+`GameRoomService.listOpenRooms()` issues one `select ... from game_rooms where
+status=?`, followed by one additional `select ... from players join users ...
+where id=?` per room in the result set to resolve each room's host — a classic
+N+1. It wasn't observable before Task 9 because `listRooms` returned entities
+directly and Jackson lazily triggered the same joins during serialization
+outside of any query-count assertion; Task 9 just made the pattern explicit
+inside `GameRoomDto.from`. Not fixed here per the task brief — the fix is a
+fetch-join or `@EntityGraph` on `GameRoomRepository.findByStatus`, a separate,
+low-risk follow-up.
