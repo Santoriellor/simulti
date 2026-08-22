@@ -1,6 +1,8 @@
 package ch.multispace.backend.controllers;
 
 import ch.multispace.backend.dtos.CreateRoomRequestDTO;
+import ch.multispace.backend.exceptions.NotFoundException;
+import ch.multispace.backend.exceptions.UnauthorizedException;
 import ch.multispace.backend.game.GameRoomService;
 import ch.multispace.backend.model.GameRoom;
 import ch.multispace.backend.model.PlayerEntity;
@@ -46,7 +48,7 @@ public class GameRoomController {
             token = authHeader.substring(7);
         }
         if (token == null) {
-            throw new RuntimeException("Missing token for SSE");
+            throw new UnauthorizedException("Missing token for SSE");
         }
         // Validate like WebSocket
         jwtService.validateTokenForWebSocket(token);
@@ -61,12 +63,12 @@ public class GameRoomController {
     ) {
 
         if (userDetails == null) {
-            throw new RuntimeException("userDetails is null! Authentication failed?");
+            throw new UnauthorizedException("Authentication required");
         }
 
         User user = userRepository
                 .findByEmail(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new NotFoundException("User not found"));
         PlayerEntity player = playerRepository
                 .findByUser(user)
                 .orElseGet(() -> {
@@ -87,15 +89,15 @@ public class GameRoomController {
             @PathVariable UUID roomId
     ) {
         if (userDetails == null) {
-            throw new RuntimeException("userDetails is null! Authentication failed?");
+            throw new UnauthorizedException("Authentication required");
         }
 
         /*User user = userRepository
                 .findByEmail(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("User not found"));*/
+                .orElseThrow(() -> new NotFoundException("User not found"));*/
 
         GameRoom session = gameRoomService.findById(roomId)
-                .orElseThrow(() -> new RuntimeException("Room not found"));
+                .orElseThrow(() -> new NotFoundException("Room not found"));
 
         // Optional: Check if the user is the owner of the room
         /*if (!session.getOwner().getUser().equals(user)) {
@@ -116,7 +118,7 @@ public class GameRoomController {
     ) {
         User user = userRepository
                 .findByEmail(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new NotFoundException("User not found"));
         PlayerEntity player = playerRepository
                 .findByUser(user)
                 .orElseGet(() -> {

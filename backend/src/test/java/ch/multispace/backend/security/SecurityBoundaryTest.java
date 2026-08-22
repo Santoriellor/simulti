@@ -1,14 +1,11 @@
 package ch.multispace.backend.security;
 
-import jakarta.servlet.ServletException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -66,18 +63,12 @@ class SecurityBoundaryTest {
     // /api/rooms/stream is permitAll (an EventSource in the browser cannot send an
     // Authorization header), so an unauthenticated request reaches
     // GameRoomController.streamRooms rather than being stopped by Spring Security.
-    // That method throws a bare RuntimeException("Missing token for SSE"), and with
-    // no @ControllerAdvice in this codebase (verified), there is nothing to translate
-    // it into an HTTP response: under MockMvc it surfaces as an uncaught
-    // ServletException out of perform() itself, not a captured 5xx status. This
-    // assertion documents that as-is behavior; see
+    // That method throws UnauthorizedException("Missing token for SSE"), which
+    // GlobalExceptionHandler now translates into a genuine 401 response; see
     // docs/decisions/0003-deferred-findings.md.
     @Test
-    void theSseStreamRejectsAMissingToken() {
-        ServletException ex = assertThrows(ServletException.class,
-                () -> mockMvc.perform(get("/api/rooms/stream")));
-        assertThat(ex.getCause())
-                .isInstanceOf(RuntimeException.class)
-                .hasMessage("Missing token for SSE");
+    void theSseStreamRejectsAMissingToken() throws Exception {
+        mockMvc.perform(get("/api/rooms/stream"))
+                .andExpect(status().isUnauthorized());
     }
 }

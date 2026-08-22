@@ -95,6 +95,14 @@ class GameRoomControllerTest {
     }
 
     @Test
+    void deletingAnUnknownRoomReturns404() throws Exception {
+        String token = registerAndGetToken();
+        mockMvc.perform(delete("/api/rooms/00000000-0000-0000-0000-000000000000/delete")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     void aSecondPlayerCanJoinAnOpenRoom() throws Exception {
         String hostToken = registerAndGetToken();
         String roomId = createRoom(hostToken, "Charlie");
