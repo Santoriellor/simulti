@@ -1,26 +1,36 @@
 import { AfterViewInit, Component, ElementRef, OnDestroy, ViewChild } from '@angular/core';
 
-type Inv = { x: number; y: number; w: number; h: number; frame: number; type: number; alive: boolean };
+type Inv = {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  frame: number;
+  type: number;
+  alive: boolean;
+};
 type Star = { x: number; y: number; speed: number; size: number; alpha: number };
 
 @Component({
   selector: 'app-backdrop',
   standalone: true,
   template: `<canvas #bgCanvas class="bg-canvas"></canvas>`,
-  styles: [`
-    :host {
-      position: absolute;
-      inset: 0;
-      display: block;
-      pointer-events: none;
-      opacity: .65;
-    }
-    .bg-canvas {
-      width: 100%;
-      height: 100%;
-      display: block;
-    }
-  `]
+  styles: [
+    `
+      :host {
+        position: absolute;
+        inset: 0;
+        display: block;
+        pointer-events: none;
+        opacity: 0.65;
+      }
+      .bg-canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+    `,
+  ],
 })
 export class BackdropComponent implements AfterViewInit, OnDestroy {
   @ViewChild('bgCanvas', { static: true }) canvasRef!: ElementRef<HTMLCanvasElement>;
@@ -46,7 +56,9 @@ export class BackdropComponent implements AfterViewInit, OnDestroy {
 
     // resize adaptatif
     this.resizeObs = new ResizeObserver(() => this.setupCanvas());
-    this.resizeObs.observe(this.canvasRef.nativeElement.parentElement || this.canvasRef.nativeElement);
+    this.resizeObs.observe(
+      this.canvasRef.nativeElement.parentElement || this.canvasRef.nativeElement,
+    );
   }
 
   ngOnDestroy(): void {
@@ -74,14 +86,15 @@ export class BackdropComponent implements AfterViewInit, OnDestroy {
       y: Math.random() * c.height,
       speed: 10 + Math.random() * 35,
       size: Math.random() * 1.2 + 0.3,
-      alpha: 0.2 + Math.random() * 0.8
+      alpha: 0.2 + Math.random() * 0.8,
     }));
   }
 
   private initInvaders() {
     this.invaders = [];
     const c = this.canvasRef.nativeElement;
-    const cols = 10, rows = 4;
+    const cols = 10,
+      rows = 4;
     const spacingX = Math.max(24, Math.min(44, c.width / (cols + 3)));
     const spacingY = 28;
     const gridW = (cols - 1) * spacingX + 20;
@@ -125,7 +138,8 @@ export class BackdropComponent implements AfterViewInit, OnDestroy {
 
     // invaders (mouvement lent, décoratif)
     const speed = 16; // px/s
-    let minX = Infinity, maxX = -Infinity;
+    let minX = Infinity,
+      maxX = -Infinity;
     for (const inv of this.invaders) {
       if (!inv.alive) continue;
       minX = Math.min(minX, inv.x);
@@ -158,7 +172,14 @@ export class BackdropComponent implements AfterViewInit, OnDestroy {
     ctx.clearRect(0, 0, c.width, c.height);
 
     // légère nébuleuse
-    const gradient = ctx.createRadialGradient(c.width * 0.5, c.height * 0.1, 10, c.width * 0.5, c.height * 0.1, c.width * 0.8);
+    const gradient = ctx.createRadialGradient(
+      c.width * 0.5,
+      c.height * 0.1,
+      10,
+      c.width * 0.5,
+      c.height * 0.1,
+      c.width * 0.8,
+    );
     gradient.addColorStop(0, 'rgba(0,255,102,0.3)');
     gradient.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = gradient;
@@ -182,38 +203,30 @@ export class BackdropComponent implements AfterViewInit, OnDestroy {
     const f = inv.frame;
     const pattern =
       inv.type === 0
-        ? [
-            '....###....',
-            '...#####...',
-            '..#######..',
-            '..##.#.##..',
-            '..#######..',
-            '.#.#.#.#.#.',
-          ]
+        ? ['....###....', '...#####...', '..#######..', '..##.#.##..', '..#######..', '.#.#.#.#.#.']
         : inv.type === 1
-        ? [
-            '...#####...',
-            '..#######..',
-            '.###.#.###.',
-            '###########',
-            '.###.#.###.',
-          ]
-        : [
-            '....###....',
-            '..#######..',
-            '.#########.',
-            '.##.###.##.',
-            '.#########.',
-            '..#.#.#.#..',
-          ];
+          ? ['...#####...', '..#######..', '.###.#.###.', '###########', '.###.#.###.']
+          : [
+              '....###....',
+              '..#######..',
+              '.#########.',
+              '.##.###.##.',
+              '.#########.',
+              '..#.#.#.#..',
+            ];
     const scaleX = inv.w / pattern[0].length;
     const scaleY = inv.h / pattern.length;
     for (let y = 0; y < pattern.length; y++) {
       const row = pattern[y];
       for (let x = 0; x < row.length; x++) {
         if (row[x] === '#') {
-          const ox = f ? (y % 2 === 0 ? 0 : 1) : (y % 2 === 0 ? 1 : 0);
-          ctx.fillRect(inv.x + (x + (ox % 2)) * scaleX, inv.y + y * scaleY, Math.max(1, scaleX - 0.5), Math.max(1, scaleY - 0.5));
+          const ox = f ? (y % 2 === 0 ? 0 : 1) : y % 2 === 0 ? 1 : 0;
+          ctx.fillRect(
+            inv.x + (x + (ox % 2)) * scaleX,
+            inv.y + y * scaleY,
+            Math.max(1, scaleX - 0.5),
+            Math.max(1, scaleY - 0.5),
+          );
         }
       }
     }

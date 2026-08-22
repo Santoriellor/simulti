@@ -1,5 +1,5 @@
 export const environment = {
-  production: true,
-  apiUrl: 'https://simulti.santoriello.ch/api',
-  wsUrl: 'wss://simulti.santoriello.ch'
+  production: false,
+  apiUrl: 'http://localhost:8080/api',
+  wsUrl: 'ws://localhost:8080',
 };

@@ -18,8 +18,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
     private final GameWebSocketHandler handler;
     private final JwtHandshakeInterceptor interceptor;
 
-    public WebSocketConfig(GameWebSocketHandler handler,
-                           JwtHandshakeInterceptor interceptor) {
+    public WebSocketConfig(GameWebSocketHandler handler, JwtHandshakeInterceptor interceptor) {
         this.handler = handler;
         this.interceptor = interceptor;
     }

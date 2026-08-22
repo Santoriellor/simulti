@@ -13,7 +13,10 @@ public class GameResult {
     private UUID id;
 
     @PrePersist
-    public void pre() { if (id == null) id=UUID.randomUUID(); if (createdAt==null) createdAt = OffsetDateTime.now(); }
+    public void pre() {
+        if (id == null) id = UUID.randomUUID();
+        if (createdAt == null) createdAt = OffsetDateTime.now();
+    }
 
     @ManyToOne
     @JoinColumn(name = "session_id")

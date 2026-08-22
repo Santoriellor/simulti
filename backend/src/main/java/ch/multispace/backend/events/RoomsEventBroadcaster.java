@@ -1,22 +1,19 @@
 package ch.multispace.backend.events;
 
 import ch.multispace.backend.model.GameRoom;
-import ch.multispace.backend.security.JwtService;
+import java.io.IOException;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.function.Consumer;
-
 /**
- * Simple SSE broadcaster for waiting room updates.
- * Clients connect to /api/rooms/stream and receive JSON events.
+ * Simple SSE broadcaster for waiting room updates. Clients connect to /api/rooms/stream and receive
+ * JSON events.
  */
 @Component
 public class RoomsEventBroadcaster {
@@ -25,9 +22,7 @@ public class RoomsEventBroadcaster {
 
     private final List<SseEmitter> emitters = new CopyOnWriteArrayList<>();
 
-    /**
-     * Subscribe a new client; caller should have validated JWT before calling this
-     */
+    /** Subscribe a new client; caller should have validated JWT before calling this */
     public SseEmitter subscribe() {
         // Set a long timeout (30 minutes)
         SseEmitter emitter = new SseEmitter(30L * 60L * 1000L);
@@ -68,9 +63,8 @@ public class RoomsEventBroadcaster {
 
     private void trySend(SseEmitter emitter, RoomsEvent event) {
         try {
-            SseEmitter.SseEventBuilder builder = SseEmitter.event()
-                    .name(event.type())
-                    .data(event, MediaType.APPLICATION_JSON);
+            SseEmitter.SseEventBuilder builder =
+                    SseEmitter.event().name(event.type()).data(event, MediaType.APPLICATION_JSON);
             emitter.send(builder);
         } catch (IOException e) {
             LOGGER.debug("SSE send failed, removing emitter: {}", e.getMessage());
@@ -79,8 +73,6 @@ public class RoomsEventBroadcaster {
         }
     }
 
-    /**
-     * Simple event record for SSE payloads
-     */
+    /** Simple event record for SSE payloads */
     public record RoomsEvent(String type, Object payload) {}
 }

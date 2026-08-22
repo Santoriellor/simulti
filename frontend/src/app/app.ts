@@ -1,18 +1,18 @@
-import {Component, OnDestroy, OnInit} from '@angular/core';
-import {Router, RouterOutlet} from '@angular/router';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Router, RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import {BackdropComponent} from './theme/backdrop.component';
-import {User} from './models/user.model';
-import {Subject, takeUntil} from 'rxjs';
-import {AuthService} from './services/auth.service';
-import {HttpClient} from '@angular/common/http';
+import { BackdropComponent } from './theme/backdrop.component';
+import { User } from './models/user.model';
+import { Subject, takeUntil } from 'rxjs';
+import { AuthService } from './services/auth.service';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-root',
   standalone: true,
   imports: [RouterOutlet, CommonModule, BackdropComponent],
   templateUrl: './app.html',
-  styleUrls: ['./app.css']
+  styleUrls: ['./app.css'],
 })
 export class App implements OnInit, OnDestroy {
   currentUser: User | null = null;
@@ -21,15 +21,13 @@ export class App implements OnInit, OnDestroy {
   constructor(
     private readonly authService: AuthService,
     private readonly router: Router,
-    private readonly http: HttpClient
+    private readonly http: HttpClient,
   ) {}
 
   ngOnInit(): void {
-    this.authService.currentUser$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(user => {
-        this.currentUser = user;
-      });
+    this.authService.currentUser$.pipe(takeUntil(this.destroy$)).subscribe((user) => {
+      this.currentUser = user;
+    });
   }
 
   logout(): void {

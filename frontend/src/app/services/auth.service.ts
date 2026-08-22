@@ -1,14 +1,14 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import {BehaviorSubject, Observable, switchMap, tap} from 'rxjs';
+import { BehaviorSubject, map, Observable, switchMap, tap } from 'rxjs';
 import { AuthResponse, LoginRequest, RegisterRequest } from '../models/auth.model';
 import { User } from '../models/user.model';
 import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
-import {jwtDecode} from 'jwt-decode';
+import { jwtDecode } from 'jwt-decode';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AuthService {
   private readonly API_URL = `${environment.apiUrl}/auth`;
@@ -17,7 +17,10 @@ export class AuthService {
   private readonly currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
 
-  constructor(private readonly http: HttpClient, private readonly router: Router) {}
+  constructor(
+    private readonly http: HttpClient,
+    private readonly router: Router,
+  ) {}
 
   // --------------------------------------------------------------
   //  INITIALIZATION (called once from app.component.ts)
@@ -32,7 +35,7 @@ export class AuthService {
 
     // Load user silently (no logout on failure)
     this.getCurrentUserFromBackend().subscribe({
-      error: () => console.warn('Unable to fetch user profile, but token exists.')
+      error: () => console.warn('Unable to fetch user profile, but token exists.'),
     });
   }
 
@@ -43,14 +46,16 @@ export class AuthService {
     const payload: LoginRequest = { email, password };
 
     return this.http.post<AuthResponse>(`${this.API_URL}/login`, payload).pipe(
-      tap(response => this.saveToken(response.token)),
-      switchMap(() => this.getCurrentUserFromBackend())
+      tap((response) => this.saveToken(response.token)),
+      switchMap(() => this.getCurrentUserFromBackend()),
     );
   }
 
   register(email: string, username: string, password: string): Observable<string> {
     const payload: RegisterRequest = { email, username, password };
-    return this.http.post(`${this.API_URL}/register`, payload, { responseType: 'text' });
+    return this.http
+      .post<AuthResponse>(`${this.API_URL}/register`, payload)
+      .pipe(map((response) => response.token));
   }
 
   logout(): void {
@@ -62,9 +67,9 @@ export class AuthService {
   //  USER PROFILE
   // --------------------------------------------------------------
   getCurrentUserFromBackend(): Observable<User> {
-    return this.http.get<User>(`${this.API_URL}/me`).pipe(
-      tap(user => this.currentUserSubject.next(user))
-    );
+    return this.http
+      .get<User>(`${this.API_URL}/me`)
+      .pipe(tap((user) => this.currentUserSubject.next(user)));
   }
 
   getCurrentUser(): User | null {
@@ -87,9 +92,9 @@ export class AuthService {
   // --------------------------------------------------------------
   private isTokenValid(token: string): boolean {
     try {
-      const decoded: any = jwtDecode(token);
-      const exp = decoded.exp * 1000;
-      return Date.now() < exp;
+      const decoded = jwtDecode<{ exp?: number }>(token);
+      if (typeof decoded.exp !== 'number') return false;
+      return Date.now() < decoded.exp * 1000;
     } catch {
       return false;
     }

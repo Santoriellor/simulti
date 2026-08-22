@@ -12,8 +12,8 @@ import { AuthService } from '../services/auth.service';
   selector: 'app-waiting-room',
   standalone: true,
   imports: [CommonModule, RouterModule, FormsModule],
-  templateUrl: './waitingRoom.component.html',
-  styleUrls: ['./waitingRoom.component.css']
+  templateUrl: './waiting-room.component.html',
+  styleUrls: ['./waiting-room.component.css'],
 })
 export class WaitingRoomComponent implements OnInit, OnDestroy {
   newRoomName: string = '';
@@ -25,7 +25,7 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
   constructor(
     private readonly http: HttpClient,
     private readonly router: Router,
-    private readonly auth: AuthService
+    private readonly auth: AuthService,
   ) {}
 
   ngOnInit(): void {
@@ -34,26 +34,27 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
   }
 
   loadRooms(): void {
-    this.http.get<GameRoom[]>(`${environment.apiUrl}/rooms`).pipe(
-      takeUntil(this.destroy$)
-    ).subscribe({
-      next: rooms => {
-        // Map API response to your GameRoom interface
-        this.rooms = rooms.map(r => ({
-          roomId: r.roomId,
-          roomName: r.roomName,
-          playerIds: r.playerIds,
-          status: r.status.toLowerCase() as 'waiting' | 'started',
-          maxPlayer: BigInt(r.maxPlayer),
-          wave: r.wave,
-          startedAt: r.startedAt,
-          endedAt: r.endedAt,
-          hostId: ''
-        }));
-        console.log("rooms", this.rooms);
-      },
-      error: err => console.error('Cannot load rooms', err)
-    });
+    this.http
+      .get<GameRoom[]>(`${environment.apiUrl}/rooms`)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (rooms) => {
+          // Map API response to your GameRoom interface
+          this.rooms = rooms.map((r) => ({
+            roomId: r.roomId,
+            roomName: r.roomName,
+            playerIds: r.playerIds,
+            status: r.status.toLowerCase() as 'waiting' | 'started',
+            maxPlayer: BigInt(r.maxPlayer),
+            wave: r.wave,
+            startedAt: r.startedAt,
+            endedAt: r.endedAt,
+            hostId: '',
+          }));
+          console.log('rooms', this.rooms);
+        },
+        error: (err) => console.error('Cannot load rooms', err),
+      });
   }
 
   private startRoomsSse(): void {
@@ -85,7 +86,7 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
     bind('room.deleted', (e) => {
       const id = (e.payload as string) || (e.payload?.roomId as string);
       if (!id) return;
-      this.rooms = this.rooms.filter(r => r.roomId !== id);
+      this.rooms = this.rooms.filter((r) => r.roomId !== id);
     });
 
     this.eventSource.onerror = () => {
@@ -107,10 +108,10 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
       wave: apiRoom.wave ?? 0,
       startedAt: apiRoom.startedAt ?? null,
       endedAt: apiRoom.endedAt ?? null,
-      hostId: ''
+      hostId: '',
     };
 
-    const idx = this.rooms.findIndex(r => r.roomId === mapped.roomId);
+    const idx = this.rooms.findIndex((r) => r.roomId === mapped.roomId);
     if (idx === -1) {
       // Only show waiting rooms in this list if that is the intended behavior
       this.rooms = [...this.rooms, mapped];
@@ -126,40 +127,43 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
     if (!roomName) return;
     const body = { name: roomName };
 
-    this.http.post<GameRoom>(`${environment.apiUrl}/rooms`, body).pipe(
-      takeUntil(this.destroy$)
-    ).subscribe({
-      next: room => {
-        this.rooms.push(room);
-        this.newRoomName = '';
-        this.loadRooms();
-      },
-      error: err => console.error('Cannot create room', err)
-    });
+    this.http
+      .post<GameRoom>(`${environment.apiUrl}/rooms`, body)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (room) => {
+          this.rooms.push(room);
+          this.newRoomName = '';
+          this.loadRooms();
+        },
+        error: (err) => console.error('Cannot create room', err),
+      });
   }
 
   joinRoom(roomId: string): void {
-    this.http.post(`${environment.apiUrl}/rooms/${roomId}/join`, {}).pipe(
-      takeUntil(this.destroy$)
-    ).subscribe({
-      next: () => {
-        this.selectedRoomId = roomId;
-        this.router.navigate(['/game/space-invaders'], { queryParams: { roomId } });
-      },
-      error: err => console.error('Cannot join room', err)
-    });
+    this.http
+      .post(`${environment.apiUrl}/rooms/${roomId}/join`, {})
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.selectedRoomId = roomId;
+          this.router.navigate(['/game/space-invaders'], { queryParams: { roomId } });
+        },
+        error: (err) => console.error('Cannot join room', err),
+      });
   }
 
   deleteRoom(roomId: string): void {
-    this.http.delete(`${environment.apiUrl}/rooms/${roomId}/delete`, {}).pipe(
-      takeUntil(this.destroy$)
-    ).subscribe({
-      next: () => {
-        this.rooms = this.rooms.filter(room => room.roomId !== roomId);
-        console.log("Deleted room: ", roomId);
-      },
-      error: err => console.error('Cannot delete room', err)
-    });
+    this.http
+      .delete(`${environment.apiUrl}/rooms/${roomId}/delete`, {})
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.rooms = this.rooms.filter((room) => room.roomId !== roomId);
+          console.log('Deleted room: ', roomId);
+        },
+        error: (err) => console.error('Cannot delete room', err),
+      });
   }
 
   ngOnDestroy(): void {

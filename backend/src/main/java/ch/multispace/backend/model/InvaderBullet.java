@@ -3,7 +3,8 @@ package ch.multispace.backend.model;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Data @NoArgsConstructor
+@Data
+@NoArgsConstructor
 public class InvaderBullet {
     public double x, y, w, h, vy;
 

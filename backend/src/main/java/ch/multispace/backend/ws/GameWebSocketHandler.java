@@ -1,24 +1,24 @@
 package ch.multispace.backend.ws;
 
-import ch.multispace.backend.game.GameLoop;
-import ch.multispace.backend.game.GameRoom;
-import ch.multispace.backend.game.GameRoomService;
 import ch.multispace.backend.events.RoomsEventBroadcaster;
-import ch.multispace.backend.score.ScoreService;
-import ch.multispace.backend.repositories.UserRepository;
+import ch.multispace.backend.game.GameLoop;
+import ch.multispace.backend.game.GameRoomService;
+import ch.multispace.backend.game.GameSession;
+import ch.multispace.backend.model.GameRoom;
 import ch.multispace.backend.model.User;
+import ch.multispace.backend.repositories.UserRepository;
+import ch.multispace.backend.score.ScoreService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.Nonnull;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.*;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
-
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 public class GameWebSocketHandler extends TextWebSocketHandler {
@@ -36,7 +36,11 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     // Maps userId → roomId
     private final Map<String, UUID> userRoomMap = new ConcurrentHashMap<>();
 
-    public GameWebSocketHandler(GameRoomService gameRoomService, RoomsEventBroadcaster roomsEventBroadcaster, ScoreService scoreService, UserRepository userRepository) {
+    public GameWebSocketHandler(
+            GameRoomService gameRoomService,
+            RoomsEventBroadcaster roomsEventBroadcaster,
+            ScoreService scoreService,
+            UserRepository userRepository) {
         this.gameRoomService = gameRoomService;
         this.roomsEventBroadcaster = roomsEventBroadcaster;
         this.scoreService = scoreService;
@@ -47,7 +51,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     public void afterConnectionEstablished(@Nonnull WebSocketSession session) throws Exception {
         // Retrieve validated JWT attributes set by JwtHandshakeInterceptor
         String userId = getAttribute(session, "userId");
-        String email  = getAttribute(session, "email");
+        String email = getAttribute(session, "email");
         String roomIdAttr = getAttribute(session, "roomId");
 
         if (userId == null || email == null) {
@@ -55,8 +59,9 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
             return;
         }
 
-        // Join specific room if provided (unify identity with persisted room), otherwise allocate any available
-        GameRoom room;
+        // Join specific room if provided (unify identity with persisted room), otherwise allocate
+        // any available
+        GameSession room;
         if (roomIdAttr != null) {
             try {
                 UUID targetId = UUID.fromString(roomIdAttr);
@@ -69,21 +74,24 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
             room = GameLoop.findAvailableRoom();
         }
         // Resolve the display username from the persisted User (email is used for authentication)
-        String displayUsername = userRepository
-                .findByEmail(email)
-                .map(User::getUsername)
-                .orElse(email);
+        String displayUsername =
+                userRepository.findByEmail(email).map(User::getUsername).orElse(email);
 
         room.addPlayer(userId, displayUsername, session);
 
         sessionUserMap.put(session, userId);
         userRoomMap.put(userId, room.getRoomId());
 
-        LOGGER.info("✅ Player connected: {} (userId={}) in room {}", displayUsername, userId, room.getRoomId());
+        LOGGER.info(
+                "✅ Player connected: {} (userId={}) in room {}",
+                displayUsername,
+                userId,
+                room.getRoomId());
     }
 
     @Override
-    protected void handleTextMessage(@Nonnull WebSocketSession session, @Nonnull TextMessage message) throws Exception {
+    protected void handleTextMessage(
+            @Nonnull WebSocketSession session, @Nonnull TextMessage message) throws Exception {
         String userId = sessionUserMap.get(session);
         if (userId == null) return;
 
@@ -92,7 +100,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
 
         String type = node.get("type").asText();
         if ("input".equals(type)) {
-            GameRoom room = getUserGameRoom(userId);
+            GameSession room = getUserGameRoom(userId);
             if (room == null) {
                 LOGGER.error("⚠️ Player sent input but no room found: {}", userId);
                 return;
@@ -109,10 +117,11 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
 
         if ("quit".equals(type)) {
             // Player asks to quit the room voluntarily
-            GameRoom room = getUserGameRoom(userId);
+            GameSession room = getUserGameRoom(userId);
             if (room != null) {
                 boolean removed = room.removePlayer(userId);
-                LOGGER.info("Player {} quit room {} (removed={})", userId, room.getRoomId(), removed);
+                LOGGER.info(
+                        "Player {} quit room {} (removed={})", userId, room.getRoomId(), removed);
                 if (removed) {
                     // Update persistence + broadcast
                     handlePersistenceAfterLeave(room, userId);
@@ -121,7 +130,9 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
             // remove mappings and close session
             sessionUserMap.remove(session);
             userRoomMap.remove(userId);
-            try { session.close(CloseStatus.NORMAL.withReason("Player quit")); } catch (Exception _) {
+            try {
+                session.close(CloseStatus.NORMAL.withReason("Player quit"));
+            } catch (Exception _) {
                 // ignore
             }
             return;
@@ -131,14 +142,19 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     }
 
     @Override
-    public void afterConnectionClosed(@Nonnull WebSocketSession session, @Nonnull CloseStatus status) {
+    public void afterConnectionClosed(
+            @Nonnull WebSocketSession session, @Nonnull CloseStatus status) {
         String userId = sessionUserMap.remove(session);
         if (userId == null) return;
 
-        GameRoom room = getUserGameRoom(userId);
+        GameSession room = getUserGameRoom(userId);
         if (room != null) {
-            String removedUser = room.removeSession(session); // removes player entry if session matched
-            LOGGER.info("Session closed. Removed userId={} from room={}", removedUser, room.getRoomId());
+            String removedUser =
+                    room.removeSession(session); // removes player entry if session matched
+            LOGGER.info(
+                    "Session closed. Removed userId={} from room={}",
+                    removedUser,
+                    room.getRoomId());
             if (removedUser != null) {
                 handlePersistenceAfterLeave(room, removedUser);
             }
@@ -152,7 +168,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     // Helper functions
     // ------------------
 
-    private GameRoom getUserGameRoom(String userId) {
+    private GameSession getUserGameRoom(String userId) {
         UUID roomId = userRoomMap.get(userId);
         return roomId != null ? GameLoop.getRoom(roomId) : null;
     }
@@ -162,7 +178,8 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
         return (T) session.getAttributes().get(key);
     }
 
-    private void closeUnauthorized(@Nonnull WebSocketSession session,@Nonnull String reason) throws Exception {
+    private void closeUnauthorized(@Nonnull WebSocketSession session, @Nonnull String reason)
+            throws Exception {
         LOGGER.info("❌ Closing connection: {}", reason);
         session.close(CloseStatus.NOT_ACCEPTABLE.withReason(reason));
     }
@@ -172,17 +189,19 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
             var opt = gameRoomService.getRoom(roomId);
             if (opt.isPresent()) {
                 gameRoomService.deleteRoom(opt.get());
-                LOGGER.info("🗑️ Deleted persisted GameRoom with id {} after it became empty", roomId);
+                LOGGER.info(
+                        "🗑️ Deleted persisted GameRoom with id {} after it became empty", roomId);
                 roomsEventBroadcaster.broadcastRoomDeleted(roomId);
             } else {
-                LOGGER.info("No persisted GameRoom found for id {} to delete (already gone?)", roomId);
+                LOGGER.info(
+                        "No persisted GameRoom found for id {} to delete (already gone?)", roomId);
             }
         } catch (Exception e) {
             LOGGER.warn("Failed to delete persisted GameRoom {}: {}", roomId, e.getMessage());
         }
     }
 
-    private void handlePersistenceAfterLeave(GameRoom room, String userIdStr) {
+    private void handlePersistenceAfterLeave(GameSession room, String userIdStr) {
         UUID roomId = room.getRoomId();
         // If the in-memory room is now empty, delete the DB room and broadcast
         if (room.isEmpty()) {
@@ -190,7 +209,8 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
             if (!room.isScoresPersisted()) {
                 try {
                     scoreService.persistRoomScores(room.getScoresSnapshotUuidMap());
-                } catch (Exception ignored) { }
+                } catch (Exception ignored) {
+                }
                 room.markScoresPersisted();
             }
             deletePersistedRoom(roomId);
@@ -202,7 +222,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
             UUID playerUuid = UUID.fromString(userIdStr);
             var opt = gameRoomService.getRoom(roomId);
             if (opt.isPresent()) {
-                ch.multispace.backend.model.GameRoom dbRoom = opt.get();
+                GameRoom dbRoom = opt.get();
                 dbRoom.getPlayerIds().remove(playerUuid);
                 // If players remain, ensure status reflects availability
                 Integer max = dbRoom.getMaxPlayer() != null ? dbRoom.getMaxPlayer() : 2;
@@ -217,8 +237,8 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
         } catch (IllegalArgumentException ex) {
             LOGGER.warn("Could not parse userId as UUID for persistence update: {}", userIdStr);
         } catch (Exception e) {
-            LOGGER.warn("Failed to update persisted room {} after leave: {}", roomId, e.getMessage());
+            LOGGER.warn(
+                    "Failed to update persisted room {} after leave: {}", roomId, e.getMessage());
         }
     }
 }
-
