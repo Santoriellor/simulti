@@ -74,6 +74,21 @@ Found during the same survey, not tracked by any task in this cycle:
   persists a `GameResult` row — final scores go to `PlayerEntity` only (see
   `docs/design.md`, Scoring). Left as is for the same reason as `Leaderboard`.
 
+## Frontend auth guard returns a UrlTree, not `false`
+
+Task 4's characterization spec for `authGuard` (`frontend/src/app/guards/auth.guard.spec.ts`)
+was drafted assuming the guard denies access by calling `router.navigate(['/auth/login'])`
+and returning `false`, mirroring the common Angular guard pattern. The actual
+implementation (`frontend/src/app/guards/auth.guard.ts`) instead returns
+`router.createUrlTree(['/auth/login'])` — a `UrlTree`, which Angular's router
+treats as a redirect instruction — and never calls `router.navigate` at all.
+Functionally this behaves the same for real navigation (the visitor still ends
+up redirected to `/auth/login`), but it is a different mechanism than the
+initial assumption, and a spy on `router.navigate` would never fire. The spec
+was corrected to assert on the returned `UrlTree` (`result instanceof UrlTree`
+and `result.toString() === '/auth/login'`) instead. Not a defect — left as is,
+noted here as a divergence between assumed and actual behavior.
+
 ## Naming
 
 Task 13 of this cycle renames the runtime `game/GameRoom` class to
