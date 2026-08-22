@@ -143,9 +143,14 @@ Facts that must appear, all verified during the survey:
 - Three REST controllers: `AuthController` (`/api/auth`), `GameRoomController` (`/api/rooms`), `ScoreController` (`/api/leaderboard`).
 - Real-time uses two separate mechanisms: a WebSocket handler (`ws/GameWebSocketHandler`) for gameplay, authenticated at handshake by `ws/JwtHandshakeInterceptor`; and an SSE stream (`GET /api/rooms/stream`) for waiting-room updates, fed by `events/RoomsEventBroadcaster`.
 - The SSE endpoint accepts its token as a **query parameter** as well as an `Authorization` header, because `EventSource` cannot set headers.
-- Game simulation lives in `game/GameLoop` and `game/GameRoom`, which is a different class from the JPA entity `model/GameRoom`. State that this collision exists and is resolved in Task 11.
+- Game simulation lives in `game/GameLoop` and `game/GameRoom`, which is a different class from the JPA entity `model/GameRoom`. State that this collision exists and is resolved in Task 13.
 - PostgreSQL 16; `database/init.sql` is the schema of record; Hibernate runs `ddl-auto: validate`.
-- nginx serves the built Angular bundle and proxies `/api`.
+- nginx serves the built Angular bundle ONLY. It does not proxy `/api` — its
+  config says so explicitly. Traefik does the path-based split at the edge:
+  `Host(simulti.santoriello.ch) && PathPrefix(/api)` and `PathPrefix(/ws)` route
+  to the backend container, and a catch-all `Host(...)` router serves the
+  frontend. The traefik configuration is therefore load-bearing for this
+  application's routing, not merely TLS termination.
 
 - [ ] **Step 5: Write `docs/design.md`**
 
