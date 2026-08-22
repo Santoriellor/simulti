@@ -128,4 +128,20 @@ class GameRoomControllerTest {
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isNotFound());
     }
+
+    @Test
+    void aStrangerCannotDeleteSomeoneElsesRoom() throws Exception {
+        String hostToken = registerAndGetToken();
+        String roomId = createRoom(hostToken, "Echo");
+
+        String strangerToken = registerAndGetToken();
+        mockMvc.perform(delete("/api/rooms/" + roomId + "/delete")
+                        .header("Authorization", "Bearer " + strangerToken))
+                .andExpect(status().isForbidden());
+
+        // and the room must still be there
+        mockMvc.perform(get("/api/rooms/" + roomId)
+                        .header("Authorization", "Bearer " + hostToken))
+                .andExpect(status().isOk());
+    }
 }

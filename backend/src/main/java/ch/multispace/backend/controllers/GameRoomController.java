@@ -1,6 +1,7 @@
 package ch.multispace.backend.controllers;
 
 import ch.multispace.backend.dtos.CreateRoomRequestDTO;
+import ch.multispace.backend.exceptions.ForbiddenException;
 import ch.multispace.backend.exceptions.NotFoundException;
 import ch.multispace.backend.exceptions.UnauthorizedException;
 import ch.multispace.backend.game.GameRoomService;
@@ -92,22 +93,21 @@ public class GameRoomController {
             throw new UnauthorizedException("Authentication required");
         }
 
-        /*User user = userRepository
+        User user = userRepository
                 .findByEmail(userDetails.getUsername())
-                .orElseThrow(() -> new NotFoundException("User not found"));*/
+                .orElseThrow(() -> new NotFoundException("User not found"));
 
-        GameRoom session = gameRoomService.findById(roomId)
+        GameRoom room = gameRoomService.findById(roomId)
                 .orElseThrow(() -> new NotFoundException("Room not found"));
 
-        // Optional: Check if the user is the owner of the room
-        /*if (!session.getOwner().getUser().equals(user)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }*/
+        if (room.getHost() == null || !room.getHost().getUser().getId().equals(user.getId())) {
+            throw new ForbiddenException("Only the host may delete this room");
+        }
 
-        gameRoomService.deleteRoom(session);
-        roomsEventBroadcaster.broadcastRoomDeleted(session.getRoomId());
+        gameRoomService.deleteRoom(room);
+        roomsEventBroadcaster.broadcastRoomDeleted(room.getRoomId());
 
-        return ResponseEntity.noContent().build(); // 204 No Content
+        return ResponseEntity.noContent().build();
     }
 
     /** Join a room */
