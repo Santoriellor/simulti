@@ -1,10 +1,16 @@
 package ch.multispace.backend.security;
 
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.security.Key;
+import java.util.Date;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -69,6 +75,24 @@ class SecurityBoundaryTest {
     @Test
     void theSseStreamRejectsAMissingToken() throws Exception {
         mockMvc.perform(get("/api/rooms/stream"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    // A syntactically valid JWT, correctly shaped and unexpired, but signed with a key
+    // the server never issued it with. jwtService.validateTokenForWebSocket rejects it
+    // with JwtService.InvalidJwtException, which GlobalExceptionHandler translates to
+    // 401 rather than letting it fall through as a 500.
+    @Test
+    void theSseStreamRejectsAForgedToken() throws Exception {
+        Key wrongKey = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+        String forgedToken = Jwts.builder()
+                .setSubject("nobody@example.com")
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + 60_000))
+                .signWith(wrongKey, SignatureAlgorithm.HS256)
+                .compact();
+
+        mockMvc.perform(get("/api/rooms/stream").param("token", forgedToken))
                 .andExpect(status().isUnauthorized());
     }
 }
