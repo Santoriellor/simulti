@@ -97,3 +97,27 @@ deliberately leaves the frontend route path itself as `/waitingRoom`, because
 renaming a live, potentially bookmarked URL needs a redirect and that is out
 of scope here. That reasoning, and the URL rename it defers, is recorded by
 Task 13 when it lands.
+
+## Unauthenticated SSE stream fails with an uncaught exception, not a 4xx
+
+Task 5's characterization spec for the security boundary
+(`backend/src/test/java/ch/multispace/backend/security/SecurityBoundaryTest.java`)
+was drafted assuming `GET /api/rooms/stream` without a token returns
+`4xx`, mirroring the other protected endpoints. `/api/rooms/stream` is
+`permitAll` in `SecurityConfig` (an `EventSource` in the browser cannot send
+an `Authorization` header), so the unauthenticated request is not stopped by
+Spring Security — it reaches `GameRoomController.streamRooms`, which throws a
+bare `RuntimeException("Missing token for SSE")`. There is no
+`@ControllerAdvice` in this codebase to translate that into an HTTP response,
+so it is not merely a 500 status: under `MockMvc`, `mockMvc.perform(...)`
+itself throws a `jakarta.servlet.ServletException` wrapping that
+`RuntimeException`, rather than yielding a captured response with a status
+code. (A real deployed servlet container would translate an unhandled
+exception into a 500 response via Spring Boot's own error handling, but that
+translation does not happen inside the `MockMvc` test harness.) The test was
+corrected to assert on the thrown exception (`assertThrows(ServletException
+.class, ...)` with a cause of `RuntimeException` and message
+`"Missing token for SSE"`) instead of a status code. Not a defect in this
+task — left as is; Task 8 introduces the exception handler that turns this
+into a genuine 401 response and updates this test's assertion back to
+`status().isUnauthorized()` in the same commit.
