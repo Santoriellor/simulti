@@ -58,14 +58,14 @@ Joining (`POST /api/rooms/{roomId}/join`) appends the caller's player ID to
 `playerIds`; once the room reaches its player cap the status flips to
 `STARTED` and a `room.started` event is broadcast alongside the `room.updated`
 one. The player cap used for this transition is the constant
-`game.GameRoom.MAX_PLAYERS` (currently `2`), not the room's own persisted
+`game.GameSession.MAX_PLAYERS` (currently `2`), not the room's own persisted
 `maxPlayer` column — the column exists and is always set (to that same
 constant, by `GameRoomService.createRoom`) but nothing reads it back to decide
 how many players a given room should hold, so a per-room player cap is not
 actually configurable despite the field's presence.
 
 Gameplay itself happens off the `GameRoom` entity entirely, inside the
-in-memory `game/GameRoom` simulation reached over the gameplay WebSocket (see
+in-memory `game/GameSession` simulation reached over the gameplay WebSocket (see
 `docs/architecture.md`). When a player disconnects or quits,
 `GameWebSocketHandler` removes them from the simulation and then reconciles
 the persisted `GameRoom`: if the simulation room is now empty, the persisted
@@ -107,9 +107,10 @@ default-and-warn.
 `Authorization` header; the WebSocket handshake and the SSE stream each
 validate the token themselves, out of band from Spring Security's filter
 chain, for the reasons described in `docs/architecture.md`. `GET /api/auth/me`
-returns the caller's own `User` record so the frontend can show who is logged
-in — today it returns the `User` entity directly, and because
+returns the caller's own identity, as a `UserDto`, so the frontend can show
+who is logged in. It used to return the `User` entity directly, and because
 `User.password` carries no `@JsonIgnore` (unlike `User.playerProfile`, which
-does), every call to `/me` serializes the caller's BCrypt password hash into
-the JSON response. This is the motivating example for
-`docs/decisions/0002-dto-boundary.md`.
+does), every call to `/me` serialized the caller's BCrypt password hash into
+the JSON response. That leak was the motivating example for, and is fixed by,
+`docs/decisions/0002-dto-boundary.md`: `UserDto` has no `password` field, so
+no future change to the entity can reintroduce it.

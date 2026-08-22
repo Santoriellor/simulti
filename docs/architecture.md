@@ -21,8 +21,8 @@ WebSocket.
 | Package | Responsibility |
 |---|---|
 | `controllers` | Three `@RestController` classes: `AuthController` (`/api/auth`), `GameRoomController` (`/api/rooms`), `ScoreController` (`/api/leaderboard`). |
-| `services` | `AuthService` — registration, login, JWT issuance. |
-| `game` | `GameLoop`, `GameRoomService`, and the in-memory simulation class `game/GameRoom` (see Naming collision, below). |
+| `services` | `AuthService` — registration, login, JWT issuance — and `PlayerProvisioningService`, which resolves the `PlayerEntity` behind an authenticated principal, creating it on first use. |
+| `game` | `GameLoop`, `GameRoomService`, and the in-memory simulation class `game/GameSession` (see Runtime session vs. persisted room, below). |
 | `score` | `ScoreService` — turns a finished room's final scores into persisted player stats. |
 | `ws` | `GameWebSocketHandler` and `JwtHandshakeInterceptor` — the gameplay WebSocket. |
 | `events` | `RoomsEventBroadcaster` — the waiting-room SSE fan-out. |
@@ -30,7 +30,8 @@ WebSocket.
 | `config` | `SecurityConfig`, `CorsConfig`, `WebSocketConfig`. |
 | `model` | JPA entities: `User`, `PlayerEntity`, `GameRoom`, `GameResult`, `Leaderboard`, `SessionEntity`. |
 | `repositories` | Spring Data JPA repositories, one per entity above. |
-| `dtos` | `CreateRoomRequestDTO`, `LeaderboardRowDto` — the only two DTOs that exist today; most responses currently serialize entities directly (see `docs/decisions/0002-dto-boundary.md`). |
+| `dtos` | The response/request shapes controllers actually expose: `UserDto`, `GameRoomDto`, `LeaderboardRowDto`, `CreateRoomRequestDTO` and the shared `ErrorResponse` used by `GlobalExceptionHandler`. Controllers construct these from entities rather than serializing entities directly — see `docs/decisions/0002-dto-boundary.md`. |
+| `exceptions` | `NotFoundException`, `ForbiddenException`, `UnauthorizedException` — meaningful exceptions controllers and services throw — plus `GlobalExceptionHandler`, the single `@RestControllerAdvice` that turns them into `ErrorResponse` bodies with the right HTTP status. |
 
 **Frontend** (`frontend/src/app/`) is an Angular 20 standalone-component
 application: authentication (`auth/login`, `auth/register`), a home screen, a
@@ -67,7 +68,7 @@ Two independent real-time mechanisms exist, for two different purposes:
   `userId` and `email`, and stores them as WebSocket session attributes. A
   connection that fails this check is refused before `GameWebSocketHandler`
   ever sees it. Once connected, the handler joins the player into a
-  `game/GameRoom` simulation instance (`GameLoop.getOrCreate`), and from then
+  `game/GameSession` simulation instance (`GameLoop.getOrCreate`), and from then
   on the client sends `{"type":"input", ...}` messages and receives periodic
   `{"type":"state", ...}` broadcasts describing the frame.
 - **Waiting-room updates** run over Server-Sent Events at
@@ -91,16 +92,16 @@ changes. `application.yml` sets `spring.jpa.hibernate.ddl-auto: validate`:
 Hibernate checks the live schema against the entity mappings at startup and
 refuses to boot on a mismatch, but it never creates or alters a table itself.
 
-**Naming collision.** Two classes are both named `GameRoom`, in different
-packages: `model/GameRoom` is the JPA entity backing the `game_rooms` table —
-the persisted lobby record with `playerIds`, `status` and `maxPlayer`.
-`game/GameRoom` is a different, unrelated class: the in-memory simulation
-state that `GameLoop` ticks 60 times a second while players are connected over
-WebSocket. Nothing links them beyond sharing a room ID and a name. This
-collision is a known reading hazard, not a design intended to be permanent —
-Task 13 of the current refactor cycle renames the runtime class to
-`GameSession`, after which the name `GameRoom` refers only to the persisted
-entity.
+**Runtime session vs. persisted room.** Two related but distinct classes exist
+for a room: `model/GameRoom` is the JPA entity backing the `game_rooms`
+table — the persisted lobby record with `playerIds`, `status` and
+`maxPlayer`. `game/GameSession` is a different, unrelated class: the
+in-memory simulation state that `GameLoop` ticks 60 times a second while
+players are connected over WebSocket. Nothing links them beyond sharing a
+room ID. They were once both named `GameRoom`, which was a genuine naming
+collision and a reading hazard; Task 13 of this refactor cycle renamed the
+runtime class to `GameSession` specifically to remove that collision, so the
+name `GameRoom` now refers only to the persisted entity.
 
 ## Deployment topology
 

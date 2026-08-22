@@ -274,6 +274,25 @@ Unifying both onto one response shape (translating the framework's
 their defaults) is a real fix, but changes response bodies API clients may
 already depend on, so it's deferred rather than done inside Task 6.
 
+Task 15 reworded `ErrorResponse`'s javadoc to describe the two-shape
+behaviour accurately (the application's own failures vs. RFC 7807 for
+framework-level ones) instead of claiming a single shape. The underlying
+two-shape behaviour itself is unchanged and still deferred as described
+above.
+
+## Phase A documentation refreshed for Task 13's rename (Task 15)
+
+`docs/architecture.md` and `docs/design.md` still described the runtime
+simulation class as `game/GameRoom` and documented a "naming collision" with
+the JPA entity, even though Task 13 renamed that class to `game/GameSession`
+specifically to remove the collision. Both files also undercounted the
+`services` package (missing `PlayerProvisioningService`, added by Task 9) and
+had no table rows for the `dtos` and `exceptions` packages, both created
+during this cycle. `docs/design.md`'s Authentication model section still
+described `GET /api/auth/me` as returning the `User` entity directly and
+leaking the password hash, even though that was fixed by Task 7's `UserDto`.
+Task 15 corrected all of the above against current source.
+
 ## Redundant `userDetails == null` guard in `deleteRoom` (Task 9)
 
 `GameRoomController.deleteRoom` still checks `if (userDetails == null) throw
@@ -297,6 +316,49 @@ surfacing later as a status nobody's comparisons match. Left as is — turning
 it into an enum (and deciding how to store it: `@Enumerated(STRING)` against
 the existing column, no schema change needed) is a real improvement but
 touches every read and write site and wasn't in scope for this cycle.
+
+## Waiting-room Delete button is offered to non-hosts (Task 9/15)
+
+`waiting-room.component.html` renders the Delete button for every room row
+regardless of whether the current user is that room's host — it is only
+disabled once the room's status is `started`. `GameRoomController.deleteRoom`
+correctly 403s a non-host caller (`ForbiddenException`), so no unauthorized
+deletion can actually happen, but `waiting-room.component.ts`'s `deleteRoom`
+handles the failure with `error: (err) => console.error('Cannot delete
+room', err)` — a console-only log, with nothing shown to the user explaining
+why their click did nothing. Left as is: hiding or disabling the button for
+non-hosts, and surfacing the 403 as user-facing feedback, is a frontend UX
+fix out of scope for this cycle.
+
+## Stale `hostId`/`status` typings in `game-room.model.ts` (Task 9/15)
+
+`GameRoom` (`frontend/src/app/models/game-room.model.ts`) declares `hostId:
+string` and `status: 'waiting' | 'started'`. Neither matches what the backend
+actually sends since Task 9: `GameRoomDto` has no `hostId` field at all (it
+serializes `hostUsername` instead, precisely because `host` is
+`@JsonIgnore`d on the entity), and `status` comes over the wire as the
+uppercase literals `"WAITING"` / `"STARTED"`, not the lowercase union the
+model declares. `waiting-room.component.ts` papers over both mismatches by
+hand at every mapping site — hardcoding `hostId: ''` and calling
+`.toLowerCase()` on `status` before assigning it — rather than the type
+reflecting reality. Left as is: retyping the model against the real
+`GameRoomDto` shape (and deciding whether the frontend should carry a host
+identifier at all, since it does not appear to read `hostId` anywhere) is a
+frontend typing cleanup out of scope for this cycle.
+
+## `AuthController.getCurrentUser` depends on the concrete `userdetails.User` (Task 7/15)
+
+`AuthController.getCurrentUser` declares its `@AuthenticationPrincipal`
+parameter as `org.springframework.security.core.userdetails.User`, the
+concrete class Spring Security's default authentication machinery happens to
+populate, rather than the `UserDetails` interface that
+`PlayerProvisioningService.forPrincipal` and the other controllers depend on.
+It works today because `UserDetailsServiceImpl` returns that concrete type,
+but it couples the controller to an implementation detail of how principals
+are constructed instead of the abstraction the rest of the codebase uses, and
+would break if that construction ever changed. Left as is: narrowing the
+parameter to `UserDetails` is a small, low-risk cleanup that wasn't in scope
+for the task that introduced `UserDto`.
 
 ## Repeated `form.get('email')?.errors?.[...]` lookups in auth templates (Task 11)
 
