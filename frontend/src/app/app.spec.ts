@@ -12,11 +12,7 @@ describe('App', () => {
       // these providers the root component cannot be constructed at all. The
       // testing HTTP backend keeps this a real smoke test while guaranteeing
       // no request leaves the test.
-      providers: [
-        provideHttpClient(),
-        provideHttpClientTesting(),
-        provideRouter([]),
-      ],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
     }).compileComponents();
   });
 

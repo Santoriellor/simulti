@@ -11,9 +11,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 /**
- * Resolves the game profile behind an authenticated principal, creating it on
- * first use. AuthService.register already creates a PlayerEntity, so the
- * create branch only fires for accounts that predate that behaviour.
+ * Resolves the game profile behind an authenticated principal, creating it on first use.
+ * AuthService.register already creates a PlayerEntity, so the create branch only fires for accounts
+ * that predate that behaviour.
  */
 @Service
 @RequiredArgsConstructor
@@ -27,14 +27,18 @@ public class PlayerProvisioningService {
             throw new UnauthorizedException("Authentication required");
         }
         // UserDetails.getUsername() carries the email; see AuthService.
-        User user = userRepository.findByEmail(userDetails.getUsername())
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        User user =
+                userRepository
+                        .findByEmail(userDetails.getUsername())
+                        .orElseThrow(() -> new NotFoundException("User not found"));
 
-        return playerRepository.findByUser(user)
-                .orElseGet(() -> {
-                    PlayerEntity created = new PlayerEntity();
-                    created.setUser(user);
-                    return playerRepository.save(created);
-                });
+        return playerRepository
+                .findByUser(user)
+                .orElseGet(
+                        () -> {
+                            PlayerEntity created = new PlayerEntity();
+                            created.setUser(user);
+                            return playerRepository.save(created);
+                        });
     }
 }

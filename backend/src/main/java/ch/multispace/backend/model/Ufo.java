@@ -3,7 +3,8 @@ package ch.multispace.backend.model;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Data @NoArgsConstructor
+@Data
+@NoArgsConstructor
 public class Ufo {
     public double x, y, w, h, vx;
     public int scoreValue = 200;

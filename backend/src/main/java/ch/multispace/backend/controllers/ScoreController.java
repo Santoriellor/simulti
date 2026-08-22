@@ -1,13 +1,12 @@
 package ch.multispace.backend.controllers;
 
-import ch.multispace.backend.score.ScoreService;
 import ch.multispace.backend.dtos.LeaderboardRowDto;
+import ch.multispace.backend.score.ScoreService;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/leaderboard")
@@ -21,5 +20,4 @@ public class ScoreController {
     public List<LeaderboardRowDto> listLeaderboard() {
         return scoreService.listHighScores();
     }
-
 }

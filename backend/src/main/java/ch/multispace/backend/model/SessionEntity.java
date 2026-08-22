@@ -32,5 +32,4 @@ public class SessionEntity {
 
     @Column(name = "expires_at")
     private OffsetDateTime expiresAt;
-
 }

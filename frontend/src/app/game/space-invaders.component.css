@@ -52,8 +52,12 @@
   text-overflow: ellipsis;
 }
 
-.hud-username { margin-right: 8px; }
-.hud-score { margin-left: 8px; }
+.hud-username {
+  margin-right: 8px;
+}
+.hud-score {
+  margin-left: 8px;
+}
 
 .hud-lives .life {
   margin-right: 2px;
@@ -65,7 +69,9 @@
   letter-spacing: 2px;
 }
 
-.placeholder { opacity: 0.6; }
+.placeholder {
+  opacity: 0.6;
+}
 
 .hud-gameover-small {
   color: #f55;
@@ -77,7 +83,7 @@
   border: 2px solid #0f0;
   background: #000;
   border-radius: 6px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
   /* Make canvas responsive and keep aspect ratio (480x600) */
   width: 100%;
   height: auto;

@@ -1,20 +1,16 @@
 package ch.multispace.backend.game;
 
-import ch.multispace.backend.ws.GameWebSocketHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
-
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 
-/**
- * GameLoop: ticks rooms and optionally prunes totally unused rooms to avoid memory leak.
- */
+/** GameLoop: ticks rooms and optionally prunes totally unused rooms to avoid memory leak. */
 @Component
 public class GameLoop {
 
@@ -25,9 +21,13 @@ public class GameLoop {
     // optionally remove rooms that have been empty for this many seconds
     private static final long CLEANUP_THRESHOLD_SECONDS = 60L * 30; // 30 minutes
 
-    public static void registerRoom(GameSession r) { rooms.add(r); }
+    public static void registerRoom(GameSession r) {
+        rooms.add(r);
+    }
 
-    public static void unregisterRoom(GameSession r) { rooms.remove(r); }
+    public static void unregisterRoom(GameSession r) {
+        rooms.remove(r);
+    }
 
     @Scheduled(fixedRate = 16)
     public void tick() {
@@ -39,10 +39,12 @@ public class GameLoop {
         }
 
         // 2. Optional cleanup: remove rooms idle for too long
-        if (rooms.removeIf(room ->
-                room.isEmpty() &&
-                        Duration.between(room.getLastActiveAt(), Instant.now()).getSeconds() > CLEANUP_THRESHOLD_SECONDS
-        )) {
+        if (rooms.removeIf(
+                room ->
+                        room.isEmpty()
+                                && Duration.between(room.getLastActiveAt(), Instant.now())
+                                                .getSeconds()
+                                        > CLEANUP_THRESHOLD_SECONDS)) {
             LOGGER.info("Removed {} idle rooms", rooms.size());
         }
 
@@ -55,24 +57,24 @@ public class GameLoop {
         }
     }
 
-    /**
-     * Finds a room with free space or creates a new one.
-     */
+    /** Finds a room with free space or creates a new one. */
     public static GameSession findAvailableRoom() {
-        return rooms.stream().filter(r -> !r.isFull()).findFirst().orElseGet(() -> {
-            GameSession newRoom = new GameSession();
-            return newRoom;
-        });
+        return rooms.stream()
+                .filter(r -> !r.isFull())
+                .findFirst()
+                .orElseGet(
+                        () -> {
+                            GameSession newRoom = new GameSession();
+                            return newRoom;
+                        });
     }
 
-    /**
-     * Find a room by ID
-     */
-    public static GameSession getRoom(UUID roomId) { return rooms.stream().filter(r -> r.getRoomId().equals(roomId)).findFirst().orElse(null); }
+    /** Find a room by ID */
+    public static GameSession getRoom(UUID roomId) {
+        return rooms.stream().filter(r -> r.getRoomId().equals(roomId)).findFirst().orElse(null);
+    }
 
-    /**
-     * Get an existing room by id or create a new one with that id.
-     */
+    /** Get an existing room by id or create a new one with that id. */
     public static GameSession getOrCreate(UUID roomId) {
         GameSession existing = getRoom(roomId);
         if (existing != null) return existing;

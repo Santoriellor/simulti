@@ -1,4 +1,9 @@
-import { ApplicationConfig, provideZoneChangeDetection, provideAppInitializer, inject } from '@angular/core';
+import {
+  ApplicationConfig,
+  provideZoneChangeDetection,
+  provideAppInitializer,
+  inject,
+} from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { routes } from './app.routes';
@@ -14,9 +19,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
 
     // Register the functional interceptor
-    provideHttpClient(
-      withInterceptors([authInterceptorFn])
-    ),
+    provideHttpClient(withInterceptors([authInterceptorFn])),
 
     // 1) Theme initializer
     provideAppInitializer(() => {
@@ -30,6 +33,6 @@ export const appConfig: ApplicationConfig = {
       const auth = inject(AuthService);
       auth.init();
       return undefined;
-    })
-  ]
+    }),
+  ],
 };

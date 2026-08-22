@@ -13,7 +13,10 @@ public class Leaderboard {
     private UUID id;
 
     @PrePersist
-    public void pre() { if (id == null) id = UUID.randomUUID(); if (updatedAt==null) updatedAt = OffsetDateTime.now(); }
+    public void pre() {
+        if (id == null) id = UUID.randomUUID();
+        if (updatedAt == null) updatedAt = OffsetDateTime.now();
+    }
 
     @ManyToOne
     @JoinColumn(name = "user_id")

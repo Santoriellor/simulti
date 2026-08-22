@@ -2,17 +2,16 @@ package ch.multispace.backend.ws;
 
 import ch.multispace.backend.security.JwtService;
 import jakarta.annotation.Nonnull;
+import jakarta.servlet.http.HttpServletRequest;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
-import org.springframework.web.socket.server.HandshakeInterceptor;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.server.ServerHttpRequest;
-import org.springframework.http.server.ServletServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
+import org.springframework.http.server.ServletServerHttpRequest;
+import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketHandler;
-
-import java.util.Map;
+import org.springframework.web.socket.server.HandshakeInterceptor;
 
 @Component
 public class JwtHandshakeInterceptor implements HandshakeInterceptor {
@@ -26,8 +25,12 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
     }
 
     @Override
-    public boolean beforeHandshake(@Nonnull ServerHttpRequest request, @Nonnull ServerHttpResponse response,
-                                   @Nonnull WebSocketHandler wsHandler, @Nonnull Map<String, Object> attributes) throws Exception {
+    public boolean beforeHandshake(
+            @Nonnull ServerHttpRequest request,
+            @Nonnull ServerHttpResponse response,
+            @Nonnull WebSocketHandler wsHandler,
+            @Nonnull Map<String, Object> attributes)
+            throws Exception {
 
         if (!(request instanceof ServletServerHttpRequest servletRequest)) {
             return false;
@@ -91,8 +94,11 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
     }
 
     @Override
-    public void afterHandshake(@Nonnull ServerHttpRequest request, @Nonnull ServerHttpResponse response,
-                               @Nonnull WebSocketHandler wsHandler, Exception exception) {
+    public void afterHandshake(
+            @Nonnull ServerHttpRequest request,
+            @Nonnull ServerHttpResponse response,
+            @Nonnull WebSocketHandler wsHandler,
+            Exception exception) {
         // No-op
     }
 }

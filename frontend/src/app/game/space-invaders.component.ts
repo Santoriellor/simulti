@@ -2,7 +2,7 @@ import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/co
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../services/auth.service';
 import { environment } from '../../environments/environment';
-import {ActivatedRoute, Router} from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { take } from 'rxjs';
 
 interface GameState {
@@ -19,105 +19,105 @@ interface GameState {
 
 // Player cannon (11 × 8)
 const PLAYER_SPRITE = [
-  "00000111000",
-  "00011111100",
-  "00111111110",
-  "01111111111",
-  "11111111111",
-  "11111111111",
-  "00100100100",
-  "00100100100"
+  '00000111000',
+  '00011111100',
+  '00111111110',
+  '01111111111',
+  '11111111111',
+  '11111111111',
+  '00100100100',
+  '00100100100',
 ];
 
 // Invader type 1 (squid) – 2 frames
 const INVADER1_A = [
-  "0011001100",
-  "0001111000",
-  "0111111110",
-  "1111111111",
-  "1101101101",
-  "1100000111",
-  "0001100000",
-  "0010010000"
+  '0011001100',
+  '0001111000',
+  '0111111110',
+  '1111111111',
+  '1101101101',
+  '1100000111',
+  '0001100000',
+  '0010010000',
 ];
 
 const INVADER1_B = [
-  "0011001100",
-  "0001111000",
-  "0111111110",
-  "1111111111",
-  "1101101101",
-  "1100000111",
-  "0010010010",
-  "0100000001"
+  '0011001100',
+  '0001111000',
+  '0111111110',
+  '1111111111',
+  '1101101101',
+  '1100000111',
+  '0010010010',
+  '0100000001',
 ];
 
 // Invader type 2 (crab)
 const INVADER2_A = [
-  "00111100",
-  "01111110",
-  "11111111",
-  "11011011",
-  "11111111",
-  "00100100",
-  "01000010",
-  "10000001"
+  '00111100',
+  '01111110',
+  '11111111',
+  '11011011',
+  '11111111',
+  '00100100',
+  '01000010',
+  '10000001',
 ];
 
 const INVADER2_B = [
-  "00111100",
-  "01111110",
-  "11111111",
-  "11011011",
-  "11111111",
-  "01001010",
-  "10000001",
-  "00000000"
+  '00111100',
+  '01111110',
+  '11111111',
+  '11011011',
+  '11111111',
+  '01001010',
+  '10000001',
+  '00000000',
 ];
 
 // Invader type 3 (octopus)
 const INVADER3_A = [
-  "00111100",
-  "01111110",
-  "11111111",
-  "11000011",
-  "11000011",
-  "11111111",
-  "01100110",
-  "11000011"
+  '00111100',
+  '01111110',
+  '11111111',
+  '11000011',
+  '11000011',
+  '11111111',
+  '01100110',
+  '11000011',
 ];
 
 const INVADER3_B = [
-  "00111100",
-  "01111110",
-  "11111111",
-  "11000011",
-  "11011011",
-  "01100110",
-  "00111100",
-  "00011000"
+  '00111100',
+  '01111110',
+  '11111111',
+  '11000011',
+  '11011011',
+  '01100110',
+  '00111100',
+  '00011000',
 ];
 
 // UFO (simple)
 const UFO_SPRITE = [
-  "0011111000",
-  "0111111110",
-  "1111111111",
-  "1111111111",
-  "0111111110",
-  "0011111000"
+  '0011111000',
+  '0111111110',
+  '1111111111',
+  '1111111111',
+  '0111111110',
+  '0011111000',
 ];
 
 // Shields (16 × 8 mask)
 const SHIELD_MASK = [
-  "0001111111111000",
-  "0111111111111110",
-  "1111111111111111",
-  "1111111111111111",
-  "1111111111111111",
-  "1111111111111111",
-  "1111111111111111",
-  "0011111111111100"
+  '0001111111111000',
+  '0111111111111110',
+  '1111111111111111',
+  '1111111111111111',
+  '1111111111111111',
+  '1111111111111111',
+  '1111111111111111',
+  '0011111111111100',
 ];
 
 @Component({
@@ -125,7 +125,7 @@ const SHIELD_MASK = [
   standalone: true,
   imports: [CommonModule],
   templateUrl: './space-invaders.component.html',
-  styleUrls: ['./space-invaders.component.css']
+  styleUrls: ['./space-invaders.component.css'],
 })
 export class SpaceInvadersComponent implements OnInit, OnDestroy {
   @ViewChild('gameCanvas', { static: true }) canvasRef!: ElementRef<HTMLCanvasElement>;
@@ -151,13 +151,13 @@ export class SpaceInvadersComponent implements OnInit, OnDestroy {
     shields: [],
     ufo: null,
     level: 1,
-    gameOver: false
+    gameOver: false,
   };
 
   constructor(
     private readonly authService: AuthService,
     private readonly route: ActivatedRoute,
-    private readonly router: Router
+    private readonly router: Router,
   ) {}
 
   ngOnInit(): void {
@@ -168,7 +168,7 @@ export class SpaceInvadersComponent implements OnInit, OnDestroy {
     this.ctx = canvas.getContext('2d')!;
     this.resizeCanvas();
 
-    this.route.queryParams.pipe(take(1)).subscribe(params => {
+    this.route.queryParams.pipe(take(1)).subscribe((params) => {
       this.roomId = params['roomId'];
       this.connectWebSocket();
     });
@@ -184,14 +184,15 @@ export class SpaceInvadersComponent implements OnInit, OnDestroy {
   get mePlayer() {
     if (!this.state?.players?.length) return null;
     return (
-      this.state.players.find(p => p.userId === this.currentUserId) ??
-      this.state.players[0] ?? null
+      this.state.players.find((p) => p.userId === this.currentUserId) ??
+      this.state.players[0] ??
+      null
     );
   }
 
   get otherPlayer() {
     if (!this.state?.players?.length) return null;
-    const others = this.state.players.filter(p => p.userId !== this.currentUserId);
+    const others = this.state.players.filter((p) => p.userId !== this.currentUserId);
     return others[0] ?? null;
   }
 
@@ -226,8 +227,7 @@ export class SpaceInvadersComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const websocketUrl =
-      `${environment.wsUrl}/ws/space-invaders?token=${this.token}&roomId=${this.roomId}`;
+    const websocketUrl = `${environment.wsUrl}/ws/space-invaders?token=${this.token}&roomId=${this.roomId}`;
 
     this.ws = new WebSocket(websocketUrl);
 
@@ -248,7 +248,7 @@ export class SpaceInvadersComponent implements OnInit, OnDestroy {
           shields: data.payload.shields ?? [],
           ufo: data.payload.ufo ?? null,
           level: data.payload.level ?? 1,
-          gameOver: data.payload.gameOver ?? false
+          gameOver: data.payload.gameOver ?? false,
         };
         this.draw();
       }
@@ -285,9 +285,10 @@ export class SpaceInvadersComponent implements OnInit, OnDestroy {
 
   private sendInput() {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-      const payload = (this.isMeAlive() && !this.isOverallGameOver())
-        ? this.keys
-        : { left: false, right: false, fire: false };
+      const payload =
+        this.isMeAlive() && !this.isOverallGameOver()
+          ? this.keys
+          : { left: false, right: false, fire: false };
       this.ws.send(JSON.stringify({ type: 'input', payload }));
     }
   }
@@ -304,7 +305,7 @@ export class SpaceInvadersComponent implements OnInit, OnDestroy {
     const players = this.state?.players ?? [];
     if (players.length === 0) return false;
     // consider game over if all players have 0 lives
-    const allDead = players.every(p => (Number(p?.lives ?? 0) <= 0));
+    const allDead = players.every((p) => Number(p?.lives ?? 0) <= 0);
     return allDead;
   }
 
@@ -330,18 +331,13 @@ export class SpaceInvadersComponent implements OnInit, OnDestroy {
     x: number,
     y: number,
     scale: number,
-    color: string = 'white'
+    color: string = 'white',
   ) {
     this.ctx.fillStyle = color;
     for (let row = 0; row < sprite.length; row++) {
       for (let col = 0; col < sprite[row].length; col++) {
         if (sprite[row][col] === '1') {
-          this.ctx.fillRect(
-            x + col * scale,
-            y + row * scale,
-            scale,
-            scale
-          );
+          this.ctx.fillRect(x + col * scale, y + row * scale, scale, scale);
         }
       }
     }
@@ -384,13 +380,13 @@ export class SpaceInvadersComponent implements OnInit, OnDestroy {
     // === Draw shields ===
     for (const shield of this.state.shields || []) {
       if (shield.hp <= 0) continue;
-      const chunkW = (shield.w / SHIELD_MASK[0].length);
-      const chunkH = (shield.h / SHIELD_MASK.length);
+      const chunkW = shield.w / SHIELD_MASK[0].length;
+      const chunkH = shield.h / SHIELD_MASK.length;
 
       ctx.fillStyle = '#3ea86b';
       SHIELD_MASK.forEach((row, r) => {
         row.split('').forEach((pix, c) => {
-          if (pix === "1") {
+          if (pix === '1') {
             const posX = shield.x + c * chunkW;
             const posY = shield.y + r * chunkH;
             ctx.fillRect(posX, posY, chunkW, chunkH);

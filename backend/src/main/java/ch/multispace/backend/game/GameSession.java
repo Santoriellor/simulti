@@ -1,41 +1,41 @@
 package ch.multispace.backend.game;
 
 import ch.multispace.backend.model.Invader;
-import ch.multispace.backend.model.Shot;
 import ch.multispace.backend.model.InvaderBullet;
-import ch.multispace.backend.model.Ufo;
 import ch.multispace.backend.model.ShieldCell;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import ch.multispace.backend.model.Shot;
+import ch.multispace.backend.model.Ufo;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
-import org.springframework.web.socket.TextMessage;
-import org.springframework.web.socket.WebSocketSession;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import org.springframework.web.socket.TextMessage;
+import org.springframework.web.socket.WebSocketSession;
 
 /**
- * GameSession: server-side authoritative game state for one multiplayer room.
- * - players, invaders, shields, invader bullets, UFO
- * - level progression & difficulty scaling
- * - handles input, updates, collisions and state broadcast
+ * GameSession: server-side authoritative game state for one multiplayer room. - players, invaders,
+ * shields, invader bullets, UFO - level progression & difficulty scaling - handles input, updates,
+ * collisions and state broadcast
  */
 public class GameSession {
     private final UUID id;
     protected static final int MAX_PLAYERS = 2;
 
     private final Map<String, Player> players = new ConcurrentHashMap<>();
-    private final Set<WebSocketSession> sessions = Collections.newSetFromMap(new ConcurrentHashMap<>());
+    private final Set<WebSocketSession> sessions =
+            Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     // Use an ObjectMapper configured to serialize fields (works with Lombok or plain POJOs)
-    private final ObjectMapper mapper = new ObjectMapper()
-            .setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+    private final ObjectMapper mapper =
+            new ObjectMapper().setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
 
     // Game entities
     private final List<Invader> invaders = Collections.synchronizedList(new ArrayList<>());
-    private final List<InvaderBullet> invaderBullets = Collections.synchronizedList(new ArrayList<>());
+    private final List<InvaderBullet> invaderBullets =
+            Collections.synchronizedList(new ArrayList<>());
     private final List<ShieldCell> shields = Collections.synchronizedList(new ArrayList<>());
 
     private Ufo ufo = null;
@@ -67,7 +67,9 @@ public class GameSession {
     // -------------------------
     // INIT
     // -------------------------
-    public GameSession() { this(UUID.randomUUID()); }
+    public GameSession() {
+        this(UUID.randomUUID());
+    }
 
     public GameSession(UUID id) {
         this.id = id;
@@ -80,6 +82,7 @@ public class GameSession {
     private void markActive() {
         lastActiveAt = Instant.now();
     }
+
     public Instant getLastActiveAt() {
         return lastActiveAt;
     }
@@ -87,22 +90,38 @@ public class GameSession {
     // -------------------
     // Public helpers
     // -------------------
-    public boolean isFull() { return players.size() >= MAX_PLAYERS; }
-    public UUID getRoomId() { return id; }
-    public boolean isClosed() { return closed; }
-    public boolean isEmpty() { return players.isEmpty() && sessions.isEmpty(); }
-    public boolean isScoresPersisted() { return scoresPersisted; }
-    public void markScoresPersisted() { this.scoresPersisted = true; }
+    public boolean isFull() {
+        return players.size() >= MAX_PLAYERS;
+    }
 
-    /**
-     * Return a copy of last known scores mapped by user UUID.
-     */
+    public UUID getRoomId() {
+        return id;
+    }
+
+    public boolean isClosed() {
+        return closed;
+    }
+
+    public boolean isEmpty() {
+        return players.isEmpty() && sessions.isEmpty();
+    }
+
+    public boolean isScoresPersisted() {
+        return scoresPersisted;
+    }
+
+    public void markScoresPersisted() {
+        this.scoresPersisted = true;
+    }
+
+    /** Return a copy of last known scores mapped by user UUID. */
     public Map<java.util.UUID, Long> getScoresSnapshotUuidMap() {
         Map<java.util.UUID, Long> out = new HashMap<>();
         for (Map.Entry<String, Long> e : scoreSnapshot.entrySet()) {
             try {
                 out.put(java.util.UUID.fromString(e.getKey()), e.getValue());
-            } catch (IllegalArgumentException ignored) { }
+            } catch (IllegalArgumentException ignored) {
+            }
         }
         return out;
     }
@@ -130,14 +149,15 @@ public class GameSession {
         if (closed || isFull()) return;
 
         sessions.add(session);
-        players.putIfAbsent(userId, new Player(userId, username, session, WIDTH / 2.0 + players.size() * 30));
+        players.putIfAbsent(
+                userId, new Player(userId, username, session, WIDTH / 2.0 + players.size() * 30));
         markActive();
     }
 
     /**
-     * Remove the Player object associated with the given userId.
-     * Also removes the player's WebSocket session from sessions set.
-     * If the room becomes empty after removal, resetRoom() is called.
+     * Remove the Player object associated with the given userId. Also removes the player's
+     * WebSocket session from sessions set. If the room becomes empty after removal, resetRoom() is
+     * called.
      *
      * @param userId the id of the player to remove
      * @return true if a player was removed
@@ -160,8 +180,8 @@ public class GameSession {
 
     /**
      * Remove a session (called when WebSocket closes). Returns userId that was removed (or null).
-     * This method removes the session from sessions set and any Player that referenced it.
-     * If room becomes empty, resetRoom() is called.
+     * This method removes the session from sessions set and any Player that referenced it. If room
+     * becomes empty, resetRoom() is called.
      */
     public synchronized String removeSession(WebSocketSession s) {
         sessions.remove(s);
@@ -265,8 +285,8 @@ public class GameSession {
         double maxX = alive.stream().mapToDouble(i -> i.x + i.w).max().orElse(WIDTH);
 
         boolean stepDown =
-                (invaderDir > 0 && maxX + invaderSpeed * dt >= WIDTH - 16) ||
-                        (invaderDir < 0 && minX - invaderSpeed * dt <= 16);
+                (invaderDir > 0 && maxX + invaderSpeed * dt >= WIDTH - 16)
+                        || (invaderDir < 0 && minX - invaderSpeed * dt <= 16);
 
         if (stepDown) {
             for (Invader i : alive) i.y += 14;
@@ -276,7 +296,8 @@ public class GameSession {
         }
 
         // Check if any invader reached the ground (players' row)
-        // Players stand at y ≈ 560 (see Player.y). If any invader bottom crosses this line, end game for all.
+        // Players stand at y ≈ 560 (see Player.y). If any invader bottom crosses this line, end
+        // game for all.
         boolean invaderReachedGround = alive.stream().anyMatch(i -> (i.y + i.h) >= 560);
         if (invaderReachedGround) {
             // Set all players to dead and flag game over
@@ -319,23 +340,18 @@ public class GameSession {
         }
         if (bottom.isEmpty()) return;
 
-        Invader shooter = new ArrayList<>(bottom.values())
-                .get(new Random().nextInt(bottom.size()));
+        Invader shooter = new ArrayList<>(bottom.values()).get(new Random().nextInt(bottom.size()));
 
         invaderBullets.add(
-                new InvaderBullet(
-                        shooter.x + shooter.w / 2 - 1,
-                        shooter.y + shooter.h,
-                        2, 8, 200
-                )
-        );
+                new InvaderBullet(shooter.x + shooter.w / 2 - 1, shooter.y + shooter.h, 2, 8, 200));
     }
 
     private void updateInvaderBullets(double dt) {
-        invaderBullets.removeIf(b -> {
-            b.y += b.vy * dt;
-            return b.y > HEIGHT + 50;
-        });
+        invaderBullets.removeIf(
+                b -> {
+                    b.y += b.vy * dt;
+                    return b.y > HEIGHT + 50;
+                });
     }
 
     // --------------------
@@ -378,13 +394,7 @@ public class GameSession {
         if (ufo == null) {
             if (ufoAccumulator >= nextUfoInSeconds) {
                 boolean fromLeft = new Random().nextBoolean();
-                ufo = new Ufo(
-                        fromLeft ? -60 : WIDTH + 60,
-                        40,
-                        48, 20,
-                        fromLeft ? 120 : -120,
-                        200
-                );
+                ufo = new Ufo(fromLeft ? -60 : WIDTH + 60, 40, 48, 20, fromLeft ? 120 : -120, 200);
                 ufoAccumulator = 0;
                 nextUfoInSeconds = 25 + Math.random() * 30;
             }
@@ -432,7 +442,8 @@ public class GameSession {
             // check shields
             for (ShieldCell cell : shields) {
                 if (cell.getHp() <= 0) continue;
-                if (rectOverlap(s.x, s.y, s.w, s.h, cell.getX(), cell.getY(), cell.getW(), cell.getH())) {
+                if (rectOverlap(
+                        s.x, s.y, s.w, s.h, cell.getX(), cell.getY(), cell.getW(), cell.getH())) {
                     // damage shield
                     cell.setHp(cell.getHp() - 1);
                     p.shot = null;
@@ -457,7 +468,15 @@ public class GameSession {
                 // shields
                 for (ShieldCell cell : shields) {
                     if (cell.getHp() <= 0) continue;
-                    if (rectOverlap(b.x, b.y, b.w, b.h, cell.getX(), cell.getY(), cell.getW(), cell.getH())) {
+                    if (rectOverlap(
+                            b.x,
+                            b.y,
+                            b.w,
+                            b.h,
+                            cell.getX(),
+                            cell.getY(),
+                            cell.getW(),
+                            cell.getH())) {
                         removeBullets.add(b);
                         cell.setHp(cell.getHp() - 1);
                     }
@@ -467,10 +486,16 @@ public class GameSession {
         }
     }
 
-    private boolean rectOverlap(double ax, double ay, double aw, double ah,
-                                double bx, double by, double bw, double bh) {
-        return ax < bx + bw && ax + aw > bx &&
-                ay < by + bh && ay + ah > by;
+    private boolean rectOverlap(
+            double ax,
+            double ay,
+            double aw,
+            double ah,
+            double bx,
+            double by,
+            double bw,
+            double bh) {
+        return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
     }
 
     private void checkPlayerLives() {
@@ -542,13 +567,8 @@ public class GameSession {
         double spacingY = 28;
         for (int r = 0; r < ROWS; r++) {
             for (int c = 0; c < COLS; c++) {
-                invaders.add(new Invader(
-                        startX + c * spacingX,
-                        startY + r * spacingY,
-                        24.0,
-                        16.0,
-                        1
-                ));
+                invaders.add(
+                        new Invader(startX + c * spacingX, startY + r * spacingY, 24.0, 16.0, 1));
             }
         }
     }
@@ -586,9 +606,15 @@ public class GameSession {
             canShoot = false;
             requestFire = false;
             // re-enable shooting after 500 ms
-            new Timer().schedule(new TimerTask() {
-                @Override public void run() { canShoot = true; }
-            }, 500);
+            new Timer()
+                    .schedule(
+                            new TimerTask() {
+                                @Override
+                                public void run() {
+                                    canShoot = true;
+                                }
+                            },
+                            500);
         }
 
         void updateShot(double dt) {

@@ -2,12 +2,11 @@ package ch.multispace.backend.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.*;
-
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import lombok.*;
 
 @Entity
 @Table(name = "game_rooms")
@@ -23,7 +22,9 @@ public class GameRoom {
     private UUID roomId;
 
     @PrePersist
-    public void pre() { if (roomId == null) roomId=UUID.randomUUID(); }
+    public void pre() {
+        if (roomId == null) roomId = UUID.randomUUID();
+    }
 
     @Column(name = "room_name")
     private String roomName;
@@ -34,10 +35,7 @@ public class GameRoom {
     private PlayerEntity host;
 
     @ElementCollection
-    @CollectionTable(
-            name = "game_room_players",
-            joinColumns = @JoinColumn(name = "game_room_id")
-    )
+    @CollectionTable(name = "game_room_players", joinColumns = @JoinColumn(name = "game_room_id"))
     @Column(name = "player_id", nullable = false)
     private List<UUID> playerIds = new ArrayList<>();
 

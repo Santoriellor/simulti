@@ -5,7 +5,6 @@ import ch.multispace.backend.model.User;
 import ch.multispace.backend.repositories.PlayerRepository;
 import ch.multispace.backend.repositories.UserRepository;
 import ch.multispace.backend.security.JwtService;
-import ch.multispace.backend.ws.GameWebSocketHandler;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,15 +27,21 @@ public class AuthService {
 
     // --- Custom exceptions ---
     public static class DuplicateEmailException extends RuntimeException {
-        public DuplicateEmailException(String message) { super(message); }
+        public DuplicateEmailException(String message) {
+            super(message);
+        }
     }
 
     public static class DuplicateUsernameException extends RuntimeException {
-        public DuplicateUsernameException(String message) { super(message); }
+        public DuplicateUsernameException(String message) {
+            super(message);
+        }
     }
 
     public static class InvalidCredentialsException extends RuntimeException {
-        public InvalidCredentialsException(String message) { super(message); }
+        public InvalidCredentialsException(String message) {
+            super(message);
+        }
     }
 
     // --- Registration ---
@@ -47,18 +52,17 @@ public class AuthService {
         if (userRepository.findByUsername(username).isPresent())
             throw new DuplicateUsernameException("Username already taken");
 
-        User user = User.builder()
-                .email(email)
-                .username(username)
-                .password(passwordEncoder.encode(password))
-                .build();
+        User user =
+                User.builder()
+                        .email(email)
+                        .username(username)
+                        .password(passwordEncoder.encode(password))
+                        .build();
 
         userRepository.save(user);
 
         // Create linked player profile
-        PlayerEntity player = PlayerEntity.builder()
-                .user(user)
-                .build();
+        PlayerEntity player = PlayerEntity.builder().user(user).build();
 
         playerRepository.save(player);
 
@@ -74,8 +78,11 @@ public class AuthService {
             throw new InvalidCredentialsException("Invalid email or password");
         }
 
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
+        User user =
+                userRepository
+                        .findByEmail(email)
+                        .orElseThrow(
+                                () -> new InvalidCredentialsException("Invalid email or password"));
 
         return jwtService.generateTokenForWebSocket(userDetailsFromUser(user), user.getId());
     }

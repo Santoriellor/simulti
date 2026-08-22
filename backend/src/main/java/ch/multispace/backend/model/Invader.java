@@ -3,7 +3,8 @@ package ch.multispace.backend.model;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Data @NoArgsConstructor
+@Data
+@NoArgsConstructor
 public class Invader {
     public double x, y, w, h;
     public boolean alive = true;

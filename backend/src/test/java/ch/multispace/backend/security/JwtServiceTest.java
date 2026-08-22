@@ -1,25 +1,23 @@
 package ch.multispace.backend.security;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.Date;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.Date;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
 class JwtServiceTest {
 
-    private static final String TEST_SECRET =
-            "test-secret-key-that-is-long-enough-for-hs256!!";
+    private static final String TEST_SECRET = "test-secret-key-that-is-long-enough-for-hs256!!";
     private static final String OLD_HARDCODED_KEY =
             "YOUR_SECRET_KEY_HERE_CHANGE_THIS_TO_A_256_BIT_KEY";
 
@@ -42,17 +40,19 @@ class JwtServiceTest {
 
     @Test
     void tokenForgedWithOldHardcodedKeyIsRejected() {
-        String forged = Jwts.builder()
-                .setSubject("attacker@example.com")
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 60_000))
-                .signWith(Keys.hmacShaKeyFor(
-                                  OLD_HARDCODED_KEY.getBytes(StandardCharsets.UTF_8)),
-                          SignatureAlgorithm.HS256)
-                .compact();
+        String forged =
+                Jwts.builder()
+                        .setSubject("attacker@example.com")
+                        .setIssuedAt(new Date())
+                        .setExpiration(new Date(System.currentTimeMillis() + 60_000))
+                        .signWith(
+                                Keys.hmacShaKeyFor(
+                                        OLD_HARDCODED_KEY.getBytes(StandardCharsets.UTF_8)),
+                                SignatureAlgorithm.HS256)
+                        .compact();
 
-        assertThrows(JwtService.InvalidJwtException.class,
-                     () -> jwtService.extractUsername(forged));
+        assertThrows(
+                JwtService.InvalidJwtException.class, () -> jwtService.extractUsername(forged));
     }
 
     @Test

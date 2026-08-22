@@ -1,5 +1,6 @@
 /* Full screen black wrapper around app */
-html, body {
+html,
+body {
   margin: 0;
   width: 100vw;
   height: 100vh;
@@ -19,8 +20,8 @@ html, body {
 
 /* Portrait fixed-size game canvas */
 .app-container {
-  width: 360px;   /* << target phone width */
-  height: 640px;  /* << target phone height */
+  width: 360px; /* << target phone width */
+  height: 640px; /* << target phone height */
   background: #000;
   position: relative;
   overflow: hidden;

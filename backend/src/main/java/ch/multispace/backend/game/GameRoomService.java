@@ -3,12 +3,11 @@ package ch.multispace.backend.game;
 import ch.multispace.backend.model.GameRoom;
 import ch.multispace.backend.model.PlayerEntity;
 import ch.multispace.backend.repositories.GameRoomRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
@@ -16,16 +15,12 @@ public class GameRoomService {
 
     private final GameRoomRepository gameRoomRepository;
 
-    /**
-     * List open rooms (not full)
-     */
+    /** List open rooms (not full) */
     public List<GameRoom> listOpenRooms() {
         return gameRoomRepository.findByStatus("WAITING");
     }
 
-    /**
-     * Create a new room
-     */
+    /** Create a new room */
     public GameRoom createRoom(PlayerEntity host, String roomName) {
         GameRoom session = new GameRoom();
         session.setHost(host);
@@ -35,23 +30,17 @@ public class GameRoomService {
         return gameRoomRepository.save(session);
     }
 
-    /**
-     * Find a room by its database ID
-     */
+    /** Find a room by its database ID */
     public Optional<GameRoom> findById(UUID id) {
         return gameRoomRepository.findById(id);
     }
 
-    /**
-     * Delete a room
-     */
+    /** Delete a room */
     public void deleteRoom(GameRoom session) {
         gameRoomRepository.delete(session);
     }
 
-    /**
-     * Join a room
-     */
+    /** Join a room */
     public Optional<GameRoom> joinRoom(UUID roomId, PlayerEntity player) {
         Optional<GameRoom> opt = gameRoomRepository.findByRoomId(roomId);
         if (opt.isEmpty()) return Optional.empty();
@@ -71,13 +60,13 @@ public class GameRoomService {
         return Optional.of(session);
     }
 
-    /**
-     * Find a session by roomId
-     */
+    /** Find a session by roomId */
     public Optional<GameRoom> getRoom(UUID roomId) {
         return gameRoomRepository.findByRoomId(roomId);
     }
 
     /** Save/update room */
-    public GameRoom save(GameRoom room) { return gameRoomRepository.save(room); }
+    public GameRoom save(GameRoom room) {
+        return gameRoomRepository.save(room);
+    }
 }

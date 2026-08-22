@@ -11,22 +11,25 @@ export const routes: Routes = [
   {
     path: 'home',
     component: HomeComponent,
-    canActivate: [authGuard]
+    canActivate: [authGuard],
   },
   {
     path: 'game/space-invaders',
     canActivate: [authGuard],
-    loadComponent: () => import('./game/space-invaders.component').then(m => m.SpaceInvadersComponent)
+    loadComponent: () =>
+      import('./game/space-invaders.component').then((m) => m.SpaceInvadersComponent),
   },
   {
     path: 'leaderboard',
     canActivate: [authGuard],
-    loadComponent: () => import('./leaderboard/leaderboard.component').then(m => m.LeaderboardComponent)
+    loadComponent: () =>
+      import('./leaderboard/leaderboard.component').then((m) => m.LeaderboardComponent),
   },
   {
     path: 'waitingRoom',
     canActivate: [authGuard],
-    loadComponent: () => import('./waiting-room/waiting-room.component').then(m => m.WaitingRoomComponent)
+    loadComponent: () =>
+      import('./waiting-room/waiting-room.component').then((m) => m.WaitingRoomComponent),
   },
-  { path: '**', redirectTo: '/home' }
+  { path: '**', redirectTo: '/home' },
 ];
