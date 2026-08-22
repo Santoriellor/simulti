@@ -152,3 +152,18 @@ outside of any query-count assertion; Task 9 just made the pattern explicit
 inside `GameRoomDto.from`. Not fixed here per the task brief — the fix is a
 fetch-join or `@EntityGraph` on `GameRoomRepository.findByStatus`, a separate,
 low-risk follow-up.
+
+## Removed: spring-security-oauth2 (Task 12)
+
+`org.springframework.security.oauth:spring-security-oauth2:2.5.2.RELEASE` is the
+retired Spring Security OAuth project. It reached end of life in 2022, is pinned
+here to a 2021 release, and sits inside a Spring Boot 3.5.7 application that
+never calls it. It receives no security patches. The application authenticates
+with jjwt (`io.jsonwebtoken`) in `security/JwtService.java`, not with OAuth2.
+A grep search for oauth/OAuth references in `backend/src` produced no output,
+confirming the dependency is unused and safe to remove:
+
+```
+$ grep -rn "oauth\|OAuth" backend/src
+(no output)
+```
