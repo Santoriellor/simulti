@@ -1,9 +1,10 @@
-import { Component, OnDestroy } from '@angular/core';
-import {FormBuilder, Validators, FormGroup, ReactiveFormsModule} from '@angular/forms';
+import { Component, OnDestroy, inject } from '@angular/core';
+import { FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
-import {Router, RouterModule} from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
-import {CommonModule} from '@angular/common';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-register',
@@ -15,36 +16,39 @@ import {CommonModule} from '@angular/common';
 export class RegisterComponent implements OnDestroy {
   error: string | null = null;
   loading = false;
-  form: FormGroup;
-  private destroy$ = new Subject<void>();
 
-  constructor(private fb: FormBuilder, private auth: AuthService, private router: Router) {
-    this.form = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
-      username: ['', [Validators.required, Validators.minLength(3)]],
-      password: ['', [Validators.required, Validators.minLength(6)]]
-    });
-  }
+  private readonly fb = inject(FormBuilder);
+  private readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
+  private readonly destroy$ = new Subject<void>();
 
-  submit() {
+  readonly form = this.fb.nonNullable.group({
+    email: ['', [Validators.required, Validators.email]],
+    username: ['', [Validators.required, Validators.minLength(3)]],
+    password: ['', [Validators.required, Validators.minLength(6)]],
+  });
+
+  submit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
     this.error = null;
     this.loading = true;
-    const { email, username, password } = this.form.value;
-    this.auth.register(email!, username!, password!)
+
+    const { email, username, password } = this.form.getRawValue();
+    this.auth
+      .register(email, username, password)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
           this.loading = false;
-          this.router.navigate(['/auth/login']);
+          void this.router.navigate(['/auth/login']);
         },
-        error: (err) => {
+        error: (err: HttpErrorResponse) => {
           this.loading = false;
-          this.error = err?.error?.message || err?.message || "Échec de l'inscription";
-        }
+          this.error = err?.error?.error ?? "Échec de l'inscription";
+        },
       });
   }
 
