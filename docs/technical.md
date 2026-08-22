@@ -85,11 +85,15 @@ during the image build on the VPS.
 ## Schema changes
 
 `database/init.sql` is the schema of record (`docs/decisions/0001-schema-of-record.md`).
-The rule, verbatim from `application.yml`'s own comment above `ddl-auto:
-validate`: **change an entity, change `database/init.sql` in the same commit,
-and hand-write the `ALTER` for environments that already exist.** `init.sql`
-only applies to a brand-new, empty Postgres data volume (Postgres only runs
-files under `/docker-entrypoint-initdb.d` when the data directory is empty);
-it never runs against — and therefore never mutates — an existing database.
-Bringing a live environment's schema in line with a changed entity is always a
-manual, hand-written `ALTER`, applied out of band.
+The rule, verbatim from `database/init.sql`'s own header comment: **change an
+entity, change this file in the same commit, and hand-write the `ALTER` for
+environments that already exist.** `application.yml`'s own comment above
+`ddl-auto: validate` states the complementary rule: a startup failure naming a
+column is the finding itself, and the fix is an `ALTER` plus a matching edit
+to `init.sql` — never reverting `ddl-auto` back to `update`.
+
+`init.sql` only applies to a brand-new, empty Postgres data volume (Postgres
+only runs files under `/docker-entrypoint-initdb.d` when the data directory is
+empty); it never runs against — and therefore never mutates — an existing
+database. Bringing a live environment's schema in line with a changed entity
+is always a manual, hand-written `ALTER`, applied out of band.
