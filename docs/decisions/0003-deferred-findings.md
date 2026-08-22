@@ -118,6 +118,6 @@ translation does not happen inside the `MockMvc` test harness.) The test was
 corrected to assert on the thrown exception (`assertThrows(ServletException
 .class, ...)` with a cause of `RuntimeException` and message
 `"Missing token for SSE"`) instead of a status code. Not a defect in this
-task — left as is; Task 8 introduces the exception handler that turns this
+task — left as is; Task 6 introduces the exception handler that turns this
 into a genuine 401 response and updates this test's assertion back to
 `status().isUnauthorized()` in the same commit.

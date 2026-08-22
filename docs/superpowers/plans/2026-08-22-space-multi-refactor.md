@@ -374,7 +374,7 @@ assertions match reality.
 If `meRequiresAuthentication` fails because an unauthenticated `/me` returns
 500 rather than a 4xx, that is a finding: record it in
 `docs/decisions/0003-deferred-findings.md`, change the assertion to
-`status().is5xxServerError()` so it documents the truth, and note that Task 8
+`status().is5xxServerError()` so it documents the truth, and note that Task 6
 changes it.
 
 - [ ] **Step 3: Commit**
@@ -868,7 +868,7 @@ Expected: all six pass.
 bare `RuntimeException` when the token is missing, which Spring translates to
 500, not 4xx. If it fails with 500, that confirms the finding: change the
 assertion to `is5xxServerError()`, record it in
-`docs/decisions/0003-deferred-findings.md`, and note that Task 8 corrects it to
+`docs/decisions/0003-deferred-findings.md`, and note that Task 6 corrects it to
 401 and updates this assertion in the same commit.
 
 - [ ] **Step 4: Run the whole backend suite**
