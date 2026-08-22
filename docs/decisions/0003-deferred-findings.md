@@ -1,8 +1,8 @@
 # 3. Deferred findings
 
 Date: 2026-08-22
-Status: living document — appended to by Tasks 9, 12, 13 and 15 of this
-refactor cycle as they complete
+Status: living document — appended to by Tasks 1, 2, 3, 4, 6, 9, 11, 12, 13
+and 15 of this refactor cycle as they complete
 
 This records what the current refactor cycle deliberately leaves alone:
 problems found during the documentation and characterization survey that are
@@ -184,3 +184,125 @@ and changing it without a redirect silently breaks any saved or hardcoded
 link. Renaming the path safely needs a redirect from the old path to the new
 one, which is a behavior change and out of scope for a pure-rename task.
 Deferred to whoever next touches routing.
+
+## Stale `logging.file.name` comment in `backend/Dockerfile` (Task 1)
+
+The runtime stage comment says "application.yml sets `logging.file.name=logs/app.log`,
+which resolves under this working directory" and creates `/app/logs` for it.
+`application.yml`'s `logging:` block only sets `logging.level`; there is no
+`logging.file.name` key anywhere in the backend. The application logs to
+stdout, which is what the container runtime actually captures. Left as a
+stale comment plus a harmless unused directory — correcting or removing it is
+a documentation-only change with no runtime effect, out of scope here.
+
+## Redundant status assertion in `AuthControllerTest` (Task 2)
+
+`meReturnsTheIdentityOfTheBearer` asserts `status().isOk()` via MockMvc and
+then also asserts `assertEquals(200, result.getResponse().getStatus())` on
+the same result — the second check can never disagree with the first. Left
+as harmless redundancy in a characterization test rather than trimmed, since
+touching test assertions was out of scope for the task that wrote it.
+
+## `joinRoom` on a full room returns an opaque empty-body 400 (Task 3)
+
+`GameRoomController.joinRoom` falls back to `ResponseEntity.badRequest().build()`
+whenever `GameRoomService.joinRoom` returns an empty `Optional` — which
+happens both when the room doesn't exist and when it's already full. The
+client gets a bare 400 with no body in either case, indistinguishable from
+each other or from any other empty-Optional outcome. Left as is: giving this
+a real error shape means threading a reason out of the service layer instead
+of an `Optional`, which is a small API change out of scope for a
+characterization/DTO task.
+
+## `as never` cast in `auth.service.spec.ts` (Task 4)
+
+The login spec asserts the emitted user with
+`expect(emitted).toEqual({...} as never)` rather than typing the literal
+against `User` directly. It compiles and passes, but the cast silences any
+type-checking on the expected shape rather than proving it matches. Left as
+is; retyping it against `User` is a small, low-risk cleanup that wasn't in
+scope for the characterization task that wrote it.
+
+## Logout test doesn't assert navigation (Task 4)
+
+`clears the token and the current user on logout` in `auth.service.spec.ts`
+calls `service.logout()`, which internally calls
+`router.navigate(['/auth/login'])`, under `TestBed` configured with
+`provideRouter([])` — a router with no routes at all. The test passes only
+because an unmatched navigation doesn't throw; it never asserts that
+navigation to `/auth/login` was actually attempted (e.g. via a spy on
+`router.navigate`). Left as is: it characterizes the token/state-clearing
+behavior it names, just not the redirect, and tightening it wasn't in scope
+for Task 4.
+
+## `TokenResponse` made `public` unnecessarily (Task 6)
+
+`AuthController.TokenResponse` is declared `public static class`, but it is
+only ever constructed and returned from within `AuthController` itself in
+the same package — it compiles equally well package-private. Left `public`;
+narrowing its visibility is a no-behavior-change cleanup that wasn't in
+scope for Task 6.
+
+## `handleUnexpected` will log SSE client disconnects as errors (Task 6)
+
+`GlobalExceptionHandler.handleUnexpected` catches `Exception.class` as a
+catch-all and logs every instance at `ERROR` with a full stack trace. When a
+browser tab with an open `/api/rooms/stream` `EventSource` is closed, Spring
+MVC's async dispatch throws `AsyncRequestNotUsableException` because the
+client is gone — a routine, expected event, not a bug. That exception isn't
+handled by any more specific `@ExceptionHandler` here, so it falls through
+to `handleUnexpected` and logs an `ERROR`-level stack trace on every tab
+close. Left as is: adding a specific, quiet handler for this one exception
+type is a small follow-up, not addressed by Task 6.
+
+## Two error shapes on the API, and `ErrorResponse`'s javadoc is now inaccurate (Task 6)
+
+`GlobalExceptionHandler`'s own handlers return `{"error": "..."}` for every
+exception the application throws itself. But framework-level 4xx responses —
+malformed JSON, a wrong HTTP verb, an unsupported content type, an unmapped
+route — are handled by `ResponseEntityExceptionHandler`'s inherited handlers
+(deliberately not overridden; see the class javadoc) and return RFC 7807
+`application/problem+json` bodies instead, with a different shape entirely.
+This means `ErrorResponse`'s javadoc, "The single error shape returned by
+every failing endpoint", is no longer accurate — there are two shapes,
+selected by which layer catches the failure. Additionally, the framework's
+own 404 for an unmapped path leaks an internal detail into the response body,
+e.g. `"No static resource api/does-not-exist."`, wording that assumes
+static-resource handling and exposes the unmatched path back to the caller.
+Unifying both onto one response shape (translating the framework's
+`ErrorResponseException`s in `GlobalExceptionHandler` instead of inheriting
+their defaults) is a real fix, but changes response bodies API clients may
+already depend on, so it's deferred rather than done inside Task 6.
+
+## Redundant `userDetails == null` guard in `deleteRoom` (Task 9)
+
+`GameRoomController.deleteRoom` still checks `if (userDetails == null) throw
+new UnauthorizedException(...)` before calling
+`playerProvisioningService.forPrincipal(userDetails)`, even though
+`forPrincipal` (introduced by Task 9) is itself null-safe and throws its own
+`UnauthorizedException` when the principal is missing. The explicit guard is
+now dead weight — both paths produce the same outcome. Left in place as
+harmless duplication; removing it is a trivial cleanup that wasn't the focus
+of Task 9's DTO/service work.
+
+## `GameRoom.status` is an unconstrained `String`
+
+`GameRoom.status` is a plain `String` column, not an enum, and every read of
+it compares against literal state names case-insensitively (e.g.
+`"STARTED".equalsIgnoreCase(room.getStatus())` in
+`GameRoomController.joinRoom`). Nothing in the entity or the database
+constrains it to the actual set of valid states, so a typo or an
+unanticipated value would compile and persist without any error, only
+surfacing later as a status nobody's comparisons match. Left as is — turning
+it into an enum (and deciding how to store it: `@Enumerated(STRING)` against
+the existing column, no schema change needed) is a real improvement but
+touches every read and write site and wasn't in scope for this cycle.
+
+## Repeated `form.get('email')?.errors?.[...]` lookups in auth templates (Task 11)
+
+`login.component.html` and `register.component.html` both call
+`form.get('email')` three separate times (once for the wrapping `@if`, once
+per error key inside it) instead of hoisting it to a single template
+reference or a component getter. Task 11's substantive work was typing the
+reactive form and its component logic against a real interface; cleaning up
+this template repetition was left alone as a separate, cosmetic concern.
