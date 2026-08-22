@@ -17,12 +17,12 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * GameRoom: server-side authoritative game state for one multiplayer room.
+ * GameSession: server-side authoritative game state for one multiplayer room.
  * - players, invaders, shields, invader bullets, UFO
  * - level progression & difficulty scaling
  * - handles input, updates, collisions and state broadcast
  */
-public class GameRoom {
+public class GameSession {
     private final UUID id;
     protected static final int MAX_PLAYERS = 2;
 
@@ -67,9 +67,9 @@ public class GameRoom {
     // -------------------------
     // INIT
     // -------------------------
-    public GameRoom() { this(UUID.randomUUID()); }
+    public GameSession() { this(UUID.randomUUID()); }
 
-    public GameRoom(UUID id) {
+    public GameSession(UUID id) {
         this.id = id;
         initInvaders();
         initShields();

@@ -26,7 +26,7 @@ export const routes: Routes = [
   {
     path: 'waitingRoom',
     canActivate: [authGuard],
-    loadComponent: () => import('./waitingRoom/waitingRoom.component').then(m => m.WaitingRoomComponent)
+    loadComponent: () => import('./waiting-room/waiting-room.component').then(m => m.WaitingRoomComponent)
   },
   { path: '**', redirectTo: '/home' }
 ];

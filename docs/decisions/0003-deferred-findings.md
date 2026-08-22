@@ -167,3 +167,20 @@ confirming the dependency is unused and safe to remove:
 $ grep -rn "oauth\|OAuth" backend/src
 (no output)
 ```
+
+## Kept the runtime GameRoom class off the URL rename (Task 13)
+
+Task 13 renamed `backend/src/main/java/ch/multispace/backend/game/GameRoom.java`
+to `GameSession.java` (the in-memory simulation state driven by `GameLoop`),
+leaving `model/GameRoom.java` (the JPA entity named for the `game_rooms`
+table) untouched. It also moved the frontend `waitingRoom/` component folder
+to kebab-case `waiting-room/`, matching every other component folder.
+
+The route path `waitingRoom` (registered in `app.routes.ts`, and linked from
+`home.component.html` and `space-invaders.component.ts`) was deliberately
+left unchanged. The folder rename is purely internal -- it only affects an
+import path -- so it is free. The URL is user-visible: it may be bookmarked,
+and changing it without a redirect silently breaks any saved or hardcoded
+link. Renaming the path safely needs a redirect from the old path to the new
+one, which is a behavior change and out of scope for a pure-rename task.
+Deferred to whoever next touches routing.

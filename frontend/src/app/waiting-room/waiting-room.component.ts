@@ -12,8 +12,8 @@ import { AuthService } from '../services/auth.service';
   selector: 'app-waiting-room',
   standalone: true,
   imports: [CommonModule, RouterModule, FormsModule],
-  templateUrl: './waitingRoom.component.html',
-  styleUrls: ['./waitingRoom.component.css']
+  templateUrl: './waiting-room.component.html',
+  styleUrls: ['./waiting-room.component.css']
 })
 export class WaitingRoomComponent implements OnInit, OnDestroy {
   newRoomName: string = '';

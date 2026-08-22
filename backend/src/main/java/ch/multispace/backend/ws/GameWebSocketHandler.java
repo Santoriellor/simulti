@@ -1,11 +1,12 @@
 package ch.multispace.backend.ws;
 
 import ch.multispace.backend.game.GameLoop;
-import ch.multispace.backend.game.GameRoom;
+import ch.multispace.backend.game.GameSession;
 import ch.multispace.backend.game.GameRoomService;
 import ch.multispace.backend.events.RoomsEventBroadcaster;
 import ch.multispace.backend.score.ScoreService;
 import ch.multispace.backend.repositories.UserRepository;
+import ch.multispace.backend.model.GameRoom;
 import ch.multispace.backend.model.User;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -56,7 +57,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
         }
 
         // Join specific room if provided (unify identity with persisted room), otherwise allocate any available
-        GameRoom room;
+        GameSession room;
         if (roomIdAttr != null) {
             try {
                 UUID targetId = UUID.fromString(roomIdAttr);
@@ -92,7 +93,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
 
         String type = node.get("type").asText();
         if ("input".equals(type)) {
-            GameRoom room = getUserGameRoom(userId);
+            GameSession room = getUserGameRoom(userId);
             if (room == null) {
                 LOGGER.error("⚠️ Player sent input but no room found: {}", userId);
                 return;
@@ -109,7 +110,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
 
         if ("quit".equals(type)) {
             // Player asks to quit the room voluntarily
-            GameRoom room = getUserGameRoom(userId);
+            GameSession room = getUserGameRoom(userId);
             if (room != null) {
                 boolean removed = room.removePlayer(userId);
                 LOGGER.info("Player {} quit room {} (removed={})", userId, room.getRoomId(), removed);
@@ -135,7 +136,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
         String userId = sessionUserMap.remove(session);
         if (userId == null) return;
 
-        GameRoom room = getUserGameRoom(userId);
+        GameSession room = getUserGameRoom(userId);
         if (room != null) {
             String removedUser = room.removeSession(session); // removes player entry if session matched
             LOGGER.info("Session closed. Removed userId={} from room={}", removedUser, room.getRoomId());
@@ -152,7 +153,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
     // Helper functions
     // ------------------
 
-    private GameRoom getUserGameRoom(String userId) {
+    private GameSession getUserGameRoom(String userId) {
         UUID roomId = userRoomMap.get(userId);
         return roomId != null ? GameLoop.getRoom(roomId) : null;
     }
@@ -182,7 +183,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
         }
     }
 
-    private void handlePersistenceAfterLeave(GameRoom room, String userIdStr) {
+    private void handlePersistenceAfterLeave(GameSession room, String userIdStr) {
         UUID roomId = room.getRoomId();
         // If the in-memory room is now empty, delete the DB room and broadcast
         if (room.isEmpty()) {
@@ -202,7 +203,7 @@ public class GameWebSocketHandler extends TextWebSocketHandler {
             UUID playerUuid = UUID.fromString(userIdStr);
             var opt = gameRoomService.getRoom(roomId);
             if (opt.isPresent()) {
-                ch.multispace.backend.model.GameRoom dbRoom = opt.get();
+                GameRoom dbRoom = opt.get();
                 dbRoom.getPlayerIds().remove(playerUuid);
                 // If players remain, ensure status reflects availability
                 Integer max = dbRoom.getMaxPlayer() != null ? dbRoom.getMaxPlayer() : 2;
