@@ -97,3 +97,32 @@ only runs files under `/docker-entrypoint-initdb.d` when the data directory is
 empty); it never runs against — and therefore never mutates — an existing
 database. Bringing a live environment's schema in line with a changed entity
 is always a manual, hand-written `ALTER`, applied out of band.
+
+## Formatting
+
+Backend formatting is `spotless-maven-plugin`, configured in `backend/pom.xml`
+to run `google-java-format` in `AOSP` style (4-space indentation, matching
+this codebase) with unused imports removed:
+
+```bash
+mvn spotless:apply
+```
+
+Frontend formatting is Prettier, a declared devDependency
+(`frontend/package.json`, pinned exact version) configured by
+`frontend/.prettierrc`:
+
+```bash
+npx prettier --write "src/**/*.{ts,html,css}"
+```
+
+Neither command should ever change behaviour — only whitespace, line
+wrapping, and import order. Run both before committing source changes.
+
+Each fresh clone needs a one-time local git config so that `git blame` skips
+past the formatting sweep commit and attributes lines to whoever last changed
+their meaning:
+
+```bash
+git config blame.ignoreRevsFile .git-blame-ignore-revs
+```
