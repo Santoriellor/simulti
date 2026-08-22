@@ -68,6 +68,17 @@ describe('AuthService', () => {
     expect(localStorage.getItem('auth_token')).toBeNull();
     expect(service.getCurrentUser()).toBeNull();
   });
+
+  it('reads the token out of the register response', () => {
+    let received: string | null = null;
+    service.register('n@example.com', 'newbie', 'pw').subscribe((t) => (received = t));
+
+    const req = httpMock.expectOne(`${environment.apiUrl}/auth/register`);
+    expect(req.request.method).toBe('POST');
+    req.flush({ token: 'issued-token' });
+
+    expect(received as string | null).toBe('issued-token');
+  });
 });
 
 /** Builds an unsigned JWT whose payload decodes; jwtDecode does not verify signatures. */

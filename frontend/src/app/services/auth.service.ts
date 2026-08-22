@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import {BehaviorSubject, Observable, switchMap, tap} from 'rxjs';
+import {BehaviorSubject, map, Observable, switchMap, tap} from 'rxjs';
 import { AuthResponse, LoginRequest, RegisterRequest } from '../models/auth.model';
 import { User } from '../models/user.model';
 import { Router } from '@angular/router';
@@ -50,7 +50,9 @@ export class AuthService {
 
   register(email: string, username: string, password: string): Observable<string> {
     const payload: RegisterRequest = { email, username, password };
-    return this.http.post(`${this.API_URL}/register`, payload, { responseType: 'text' });
+    return this.http
+      .post<AuthResponse>(`${this.API_URL}/register`, payload)
+      .pipe(map((response) => response.token));
   }
 
   logout(): void {
@@ -87,9 +89,9 @@ export class AuthService {
   // --------------------------------------------------------------
   private isTokenValid(token: string): boolean {
     try {
-      const decoded: any = jwtDecode(token);
-      const exp = decoded.exp * 1000;
-      return Date.now() < exp;
+      const decoded = jwtDecode<{ exp?: number }>(token);
+      if (typeof decoded.exp !== 'number') return false;
+      return Date.now() < decoded.exp * 1000;
     } catch {
       return false;
     }
