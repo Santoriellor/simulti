@@ -62,7 +62,13 @@ jobs:
           VPS_HOST: ${{ secrets.VPS_HOST }}
           VPS_USER: ${{ secrets.VPS_USER }}
         run: |
-          rsync -avz \
+          # --delete makes the VPS mirror the repo. Without it a renamed or removed
+          # file lingers on the server forever: this refactor renamed
+          # game/GameRoom.java to GameSession.java, rsync copied the new file, left
+          # the old one, and the build failed compiling both. Excluded paths are NOT
+          # deleted unless --delete-excluded is passed, and /var/www/simulti holds
+          # only source - secrets are in /srv/secrets/simulti, data is a volume.
+          rsync -avz --delete \
             --exclude ".git" \
             --exclude ".github" \
             --exclude "node_modules" \
