@@ -128,9 +128,23 @@ render, API contracts hold, authentication and permission boundaries behave as
 they do today. No production code changes. The suite goes green and is wired
 into the existing `deploy.yml` test job.
 
-**Phase C — Refactor.** Only against a green suite. In order: the formatter
-sweep commit (D4), then structural work, then dependency bumps (D5). Small
+**Phase C — Refactor.** Only against a green suite. In order: structural work,
+then dependency bumps (D5), then the formatter sweep commit (D4) last. Small
 commits, suite green at each one.
+
+The sweep goes last because D4 requires it to be *one* isolated commit, and a
+refactor creates and deletes files. Sweeping first formats files that are about
+to be deleted and misses every file created afterwards, which forces a second
+sweep and breaks the single-commit rule that makes `.git-blame-ignore-revs`
+work at all.
+
+> **Corrected 2026-08-23.** This section originally specified the opposite
+> order — the sweep first, then structural work. All four project cycles
+> executed it the other way round, and the sweep landed among the last handful
+> of commits in every repository: space-multi 90/97, workshop 133/141,
+> santoriello.ch 70/76, website-laferme 60/66. The practice was right and the
+> specification was wrong, so the specification is corrected here rather than
+> four cycles being recorded as having deviated from it.
 
 **Phase D — Verify.** Full suite, `docker compose build`, and a deploy smoke
 check that the live hostname still answers. Then merge.
