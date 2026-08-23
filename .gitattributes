@@ -1,0 +1,23 @@
+* text=auto eol=lf
+
+# The Maven wrapper ships both forms. mvnw.cmd is a Windows batch file and the
+# command interpreter needs CRLF; converting it to LF breaks the wrapper on
+# Windows. mvnw is a POSIX shell script and must stay LF even if a Windows tool
+# rewrites it. Both are pinned explicitly rather than left to the blanket rule.
+*.cmd text eol=crlf
+*.bat text eol=crlf
+backend/mvnw text eol=lf
+
+# Explicitly mark binary assets so autocrlf/eol normalization never touches
+# them, regardless of git's content heuristics.
+*.ico binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.svg binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.jar binary
